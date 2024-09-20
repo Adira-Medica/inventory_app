@@ -1,12 +1,26 @@
 from . import db
 from flask_bcrypt import Bcrypt # type: ignore
+from flask import current_app
+from sqlalchemy.orm import relationship, joinedload
+from sqlalchemy.exc import SQLAlchemyError
+from contextlib import contextmanager
+from sqlalchemy.ext.hybrid import hybrid_property
 
 bcrypt = Bcrypt()
 
 class ItemNumber(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     item_number = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.String(200), nullable=False)
+    _description = db.Column('description', db.String(200), nullable=False)
+
+    @hybrid_property
+    def description(self):
+        return self._description
+
+    @description.setter
+    def description(self, value):
+        self._description = value[:200]  # Ensure max length of 200
+
     client = db.Column(db.String(100), nullable=False)
     protocol_number = db.Column(db.String(50), nullable=False)
     vendor = db.Column(db.String(100), nullable=False)
@@ -21,6 +35,18 @@ class ItemNumber(db.Model):
     randomized = db.Column(db.String(10), nullable=False)
     sequential_numbers = db.Column(db.String(10), nullable=False)
     study_type = db.Column(db.String(50), nullable=False)
+    locations = relationship("ItemLocation", back_populates="item")
+
+    @classmethod
+    def get_with_locations(cls, item_id):
+        return cls.query.options(joinedload(cls.locations)).filter_by(id=item_id).first()
+
+class ItemLocation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('item_number.id'))
+    location = db.Column(db.String(100), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    item = relationship("ItemNumber", back_populates="locations")
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,3 +59,16 @@ class User(db.Model):
 
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password, password)
+
+@contextmanager
+def db_session_manager(timeout=10):
+    session = db.session
+    session.execute('SET statement_timeout TO %d;' % (timeout * 1000))
+    try:
+        yield session
+        session.commit()
+    except SQLAlchemyError:
+        session.rollback()
+        raise
+    finally:
+        session.close()
