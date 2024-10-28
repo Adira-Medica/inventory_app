@@ -1,34 +1,20 @@
+# backend/inventory_app/routes/item.py
+
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required # type: ignore
+from flask_jwt_extended import jwt_required  # type: ignore
 from .. import db
 from ..models import ItemNumber
-from ..utils.role_checker import role_required
+from ..utils.form_populator import populate_item_form  # Importing populate utility
+from ..utils.role_checker import role_required  # Importing role checker utility
 
 bp = Blueprint('item', __name__, url_prefix='/api/item')
 
 @bp.route('/create', methods=['POST'])
 @jwt_required()
-@role_required('Admin')
+@role_required('Admin')  # Only Admin users can create new items
 def create_item():
     data = request.json
-    new_item = ItemNumber(
-        item_number=data['item_number'],
-        description=data['description'],
-        client=data['client'],
-        protocol_number=data['protocol_number'],
-        vendor=data['vendor'],
-        uom=data['uom'],
-        controlled=data['controlled'],
-        temp_storage_conditions=data['temp_storage_conditions'],
-        other_storage_conditions=data.get('other_storage_conditions', 'N/A'),
-        max_exposure_time=data.get('max_exposure_time'),
-        temper_time=data.get('temper_time'),
-        working_exposure_time=data.get('working_exposure_time'),
-        vendor_code_rev=data['vendor_code_rev'],
-        randomized=data['randomized'],
-        sequential_numbers=data['sequential_numbers'],
-        study_type=data['study_type']
-    )
+    new_item = populate_item_form(data)  # Populating form fields using utility
     db.session.add(new_item)
     db.session.commit()
     return jsonify({"message": "Item created successfully"}), 201
@@ -59,35 +45,41 @@ def get_items():
 
 @bp.route('/update/<int:item_id>', methods=['PUT'])
 @jwt_required()
-@role_required('Manager')
+@role_required('Manager')  # Only Manager and higher roles can update items
 def update_item(item_id):
     data = request.json
     item = ItemNumber.query.get(item_id)
+    
     if not item:
         return jsonify({"error": "Item not found"}), 404
 
-    item.description = data['description']
-    item.client = data['client']
-    item.protocol_number = data['protocol_number']
-    item.vendor = data['vendor']
-    item.uom = data['uom']
-    item.controlled = data['controlled']
-    item.temp_storage_conditions = data['temp_storage_conditions']
-    item.other_storage_conditions = data.get('other_storage_conditions', 'N/A')
-    item.max_exposure_time = data.get('max_exposure_time')
-    item.temper_time = data.get('temper_time')
-    item.working_exposure_time = data.get('working_exposure_time')
-    item.vendor_code_rev = data['vendor_code_rev']
-    item.randomized = data['randomized']
-    item.sequential_numbers = data['sequential_numbers']
-    item.study_type = data['study_type']
+    # Populate data fields into a new temporary item instance
+    updated_data = populate_item_form(data)
+    
+    # Manually update fields in the existing item
+    item.item_number = updated_data.item_number
+    item.description = updated_data.description
+    item.client = updated_data.client
+    item.protocol_number = updated_data.protocol_number
+    item.vendor = updated_data.vendor
+    item.uom = updated_data.uom
+    item.controlled = updated_data.controlled
+    item.temp_storage_conditions = updated_data.temp_storage_conditions
+    item.other_storage_conditions = updated_data.other_storage_conditions
+    item.max_exposure_time = updated_data.max_exposure_time
+    item.temper_time = updated_data.temper_time
+    item.working_exposure_time = updated_data.working_exposure_time
+    item.vendor_code_rev = updated_data.vendor_code_rev
+    item.randomized = updated_data.randomized
+    item.sequential_numbers = updated_data.sequential_numbers
+    item.study_type = updated_data.study_type
 
     db.session.commit()
     return jsonify({"message": "Item updated successfully"}), 200
 
 @bp.route('/delete/<int:item_id>', methods=['DELETE'])
 @jwt_required()
-@role_required('Admin')
+@role_required('Admin')  # Only Admin users can delete items
 def delete_item(item_id):
     item = ItemNumber.query.get(item_id)
     if not item:

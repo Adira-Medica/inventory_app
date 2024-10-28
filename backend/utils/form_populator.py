@@ -19,3 +19,4 @@ def populate_item_form(data):
         sequential_numbers=data['sequential_numbers'],
         study_type=data['study_type']
     )
+
