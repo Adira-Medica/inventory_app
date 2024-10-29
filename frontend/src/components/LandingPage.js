@@ -54,14 +54,14 @@ const LandingPage = ({ userRole }) => {
         <p className="text-gray-600 mb-6">Choose a functionality below to proceed:</p>
 
         <button
-          onClick={() => navigate('/items')}
+          onClick={() => navigate('/itemdata')}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md shadow-md font-medium"
         >
           Enter/Update/Delete data in ItemData table
         </button>
 
         <button
-          onClick={() => navigate('/receiving')}
+          onClick={() => navigate('/receivingdata')}
           className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md shadow-md font-medium"
         >
           Enter/Update/Delete data in ReceivingData table

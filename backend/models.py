@@ -40,6 +40,27 @@ class ItemNumber(db.Model):
     @classmethod
     def get_with_locations(cls, item_id):
         return cls.query.options(joinedload(cls.locations)).filter_by(id=item_id).first()
+    
+class ReceivingData(db.Model):
+    __tablename__ = 'receiving_data'
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('item_number.id'), nullable=False)  # Foreign key to ItemNumber
+    receiving_no = db.Column(db.String(20), nullable=False, unique=True)
+    tracking_number = db.Column(db.String(50), nullable=True)
+    lot_no = db.Column(db.String(50), nullable=True)
+    po_no = db.Column(db.String(10), nullable=True, default="N/A")
+    total_units_vendor = db.Column(db.Integer, nullable=True)
+    total_storage_containers = db.Column(db.Integer, nullable=True)
+    exp_date = db.Column(db.String(20), nullable=True)  # Could be 'N/A', 'TBD', or a date
+    ncmr = db.Column(db.String(5), nullable=True, default="N/A")  # Dropdown: 'Yes', 'No', 'N/A'
+    total_units_received = db.Column(db.Integer, nullable=True)
+    temp_device_in_alarm = db.Column(db.String(20), nullable=True, default="N/A")  # Dropdown: 'Yes - NCMR', 'No', 'N/A'
+    ncmr2 = db.Column(db.String(5), nullable=True, default="N/A")  # Dropdown: 'Yes', 'No', 'N/A'
+    temp_device_deactivated = db.Column(db.String(5), nullable=True, default="N/A")  # Dropdown: 'Yes', 'No', 'N/A'
+    temp_device_returned_to_courier = db.Column(db.String(5), nullable=True, default="N/A")  # Dropdown: 'Yes', 'No', 'N/A'
+    comments_for_520b = db.Column(db.String(20), nullable=True, default="N/A")  # Dropdown: 'N/A', 'Test 1', 'Test 2'
+
+    item = db.relationship("ItemNumber", backref="receiving_data")
 
 class ItemLocation(db.Model):
     id = db.Column(db.Integer, primary_key=True)

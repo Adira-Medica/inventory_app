@@ -2,31 +2,39 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../api/axios';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
 
 const ReceivingData = () => {
   const [receivingData, setReceivingData] = useState([]);
   const [formData, setFormData] = useState({
+    item_number: '',
     receiving_no: '',
-    vendor: '',
-    date_received: '',
-    condition: '',
-    comments: ''
+    tracking_number: '',
+    lot_no: '',
+    po_no: 'N/A',
+    total_units_vendor: '',
+    total_storage_containers: '',
+    exp_date: 'N/A',
+    ncmr: 'N/A',
+    total_units_received: '',
+    temp_device_in_alarm: 'N/A',
+    ncmr2: 'N/A',
+    temp_device_deactivated: 'N/A',
+    temp_device_returned_to_courier: 'N/A',
+    comments_for_520b: 'N/A'
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
-  const navigate = useNavigate();
+
+  const fetchReceivingData = async () => {
+    try {
+      const response = await axios.get('/receiving/get');
+      setReceivingData(response.data);
+    } catch (error) {
+      toast.error('Error fetching receiving data');
+    }
+  };
 
   useEffect(() => {
-    const fetchReceivingData = async () => {
-      try {
-        const response = await axios.get('/receiving/get');
-        setReceivingData(response.data);
-      } catch (error) {
-        toast.error('Error fetching receiving data');
-      }
-    };
-
     fetchReceivingData();
   }, []);
 
@@ -39,15 +47,29 @@ const ReceivingData = () => {
     e.preventDefault();
     try {
       if (isEditing) {
-        // Update existing entry
         await axios.put(`/receiving/update/${editId}`, formData);
         toast.success('Receiving data updated successfully!');
       } else {
-        // Create new entry
         await axios.post('/receiving/create', formData);
         toast.success('Receiving data added successfully!');
       }
-      setFormData({ receiving_no: '', vendor: '', date_received: '', condition: '', comments: '' });
+      setFormData({
+        item_number: '',
+        receiving_no: '',
+        tracking_number: '',
+        lot_no: '',
+        po_no: 'N/A',
+        total_units_vendor: '',
+        total_storage_containers: '',
+        exp_date: 'N/A',
+        ncmr: 'N/A',
+        total_units_received: '',
+        temp_device_in_alarm: 'N/A',
+        ncmr2: 'N/A',
+        temp_device_deactivated: 'N/A',
+        temp_device_returned_to_courier: 'N/A',
+        comments_for_520b: 'N/A'
+      });
       setIsEditing(false);
       setEditId(null);
       fetchReceivingData();
@@ -56,10 +78,10 @@ const ReceivingData = () => {
     }
   };
 
-  const handleEdit = (receiving) => {
-    setFormData(receiving);
+  const handleEdit = (entry) => {
+    setFormData(entry);
     setIsEditing(true);
-    setEditId(receiving.id);
+    setEditId(entry.id);
   };
 
   const handleDelete = async (id) => {
@@ -75,72 +97,13 @@ const ReceivingData = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">Receiving Data</h1>
-
-      {/* Receiving Data Form */}
+      
+      {/* Form */}
       <form onSubmit={handleAddOrUpdate} className="w-full max-w-lg p-8 space-y-4 bg-white shadow-md rounded mb-8">
         <h2 className="text-2xl font-bold text-center text-gray-800">{isEditing ? 'Edit Receiving Data' : 'Add New Receiving Data'}</h2>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Receiving No.</label>
-          <input
-            type="text"
-            name="receiving_no"
-            value={formData.receiving_no}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Enter Receiving No."
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Vendor</label>
-          <input
-            type="text"
-            name="vendor"
-            value={formData.vendor}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Enter Vendor Name"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Date Received</label>
-          <input
-            type="date"
-            name="date_received"
-            value={formData.date_received}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Condition</label>
-          <input
-            type="text"
-            name="condition"
-            value={formData.condition}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Enter Condition"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Comments</label>
-          <textarea
-            name="comments"
-            value={formData.comments}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="Enter Comments"
-          />
-        </div>
-
+        
+        {/* Input fields here, similar to ItemEntryForm */}
+        
         <button
           type="submit"
           className="w-full py-2 text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring focus:ring-indigo-500"
@@ -148,28 +111,27 @@ const ReceivingData = () => {
           {isEditing ? 'Update Receiving Data' : 'Add Receiving Data'}
         </button>
       </form>
-
-      {/* Receiving Data List */}
+      
+      {/* List */}
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-2xl">
         <ul className="divide-y divide-gray-200">
-          {receivingData.map((receiving) => (
-            <li key={receiving.id} className="py-4 flex justify-between items-center">
+          {receivingData.map((entry) => (
+            <li key={entry.id} className="py-4 flex justify-between items-center">
               <div>
-                <p className="text-lg font-semibold text-gray-900">Receiving No: {receiving.receiving_no}</p>
-                <p className="text-gray-600">Vendor: {receiving.vendor}</p>
-                <p className="text-gray-600">Date Received: {receiving.date_received}</p>
-                <p className="text-gray-600">Condition: {receiving.condition}</p>
-                <p className="text-gray-600">Comments: {receiving.comments}</p>
+                <p className="text-lg font-semibold text-gray-900">Receiving No: {entry.receiving_no}</p>
+                <p className="text-gray-600">Tracking No: {entry.tracking_number}</p>
+                <p className="text-gray-600">Lot No: {entry.lot_no}</p>
+                {/* Other fields */}
               </div>
               <div className="flex space-x-4">
                 <button
-                  onClick={() => handleEdit(receiving)}
+                  onClick={() => handleEdit(entry)}
                   className="text-blue-500 hover:underline"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(receiving.id)}
+                  onClick={() => handleDelete(entry.id)}
                   className="text-red-500 hover:underline"
                 >
                   Delete
