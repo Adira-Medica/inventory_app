@@ -88,3 +88,12 @@ def delete_item(item_id):
     db.session.delete(item)
     db.session.commit()
     return jsonify({"message": "Item deleted successfully"}), 200
+
+
+@bp.route('/numbers', methods=['GET'])
+@jwt_required()
+def get_item_numbers():
+    # Fetch only item_number from ItemNumber model
+    items = ItemNumber.query.with_entities(ItemNumber.item_number).all()
+    # Return a JSON list of item numbers
+    return jsonify([{"item_number": item.item_number} for item in items])
