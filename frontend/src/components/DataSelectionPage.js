@@ -1,25 +1,30 @@
-// src/components/DataSelectionPage.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const DataSelectionPage = ({ dataType }) => {
+const DataSelectionPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-4">Manage {dataType} Data</h1>
-      <button
-        onClick={() => navigate(`/add-${dataType.toLowerCase()}`)}
-        className="w-64 py-3 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 focus:outline-none"
-      >
-        Add Data
-      </button>
-      <button
-        onClick={() => navigate(`/edit-${dataType.toLowerCase()}`)}
-        className="w-64 py-3 bg-green-500 text-white font-medium rounded-md hover:bg-green-600 focus:outline-none"
-      >
-        Edit/Delete Data
-      </button>
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Data Management</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div 
+            onClick={() => navigate('/edit-data')}
+            className="p-6 bg-white rounded-lg shadow-lg hover:shadow-xl cursor-pointer"
+          >
+            <h2 className="text-xl font-bold mb-4">Edit/Delete Data</h2>
+            <p className="text-gray-600">Modify existing inventory items and receiving data</p>
+          </div>
+          <div 
+            onClick={() => navigate('/')}
+            className="p-6 bg-white rounded-lg shadow-lg hover:shadow-xl cursor-pointer"
+          >
+            <h2 className="text-xl font-bold mb-4">Back to Dashboard</h2>
+            <p className="text-gray-600">Return to main menu</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

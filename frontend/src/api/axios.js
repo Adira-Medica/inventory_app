@@ -1,12 +1,32 @@
-// src/api/axios.js
 import axios from 'axios';
 
-// Configure Axios instance with base URL for backend API
-const instance = axios.create({
-  baseURL: 'http://localhost:5000/api',
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-export default instance;
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;

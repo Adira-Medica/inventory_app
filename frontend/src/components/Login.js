@@ -1,58 +1,64 @@
 // src/components/Login.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
-import axios from '../api/axios';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      await axios.post('/auth/login', { username, password });
-      toast.success('Logged in successfully!');
-      navigate('/dashboard');
+      await login(credentials);
+      // Redirect to the page they tried to visit or dashboard
+      const from = location.state?.from?.pathname || '/';
+      navigate(from);
+      toast.success('Welcome back!');
     } catch (error) {
       toast.error('Invalid credentials, please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-lg max-w-md w-full space-y-4">
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md"
-          required
-        />
-        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-md">
-          Login
-        </button>
-        <p className="text-center text-gray-600">
-          Don’t have an account?{' '}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+        <h2 className="text-center text-3xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h2>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+          <input
+            type="text"
+            required
+            value={credentials.username}
+            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+            placeholder="Username"
+            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+          />
+          <input
+            type="password"
+            required
+            value={credentials.password}
+            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+            placeholder="Password"
+            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+          />
           <button
-            onClick={() => navigate('/register')}
-            className="text-blue-500 hover:underline"
+            type="submit"
+            disabled={loading}
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Register
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
-        </p>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };
