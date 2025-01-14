@@ -1,15 +1,27 @@
-# backend/models.py
+# models.py
 from .extensions import db
-from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    permissions = db.Column(db.JSON)
+    
+    # Relationship with users
+    users = db.relationship('User', backref='role', lazy=True)
 
 class User(db.Model):
+    __tablename__ = 'users'
+    
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
-    role = db.Column(db.String(20), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    active = db.Column(db.Boolean, default=True)
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -17,9 +29,11 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
 
 class ItemNumber(db.Model):
+    __tablename__ = 'item_number'
+    
     id = db.Column(db.Integer, primary_key=True)
     item_number = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     client = db.Column(db.String(100), nullable=False)
     protocol_number = db.Column(db.String(50), nullable=False)
     vendor = db.Column(db.String(100), nullable=False)
@@ -34,20 +48,42 @@ class ItemNumber(db.Model):
     randomized = db.Column(db.String(10), nullable=False)
     sequential_numbers = db.Column(db.String(10), nullable=False)
     study_type = db.Column(db.String(50), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_items')
+    updater = db.relationship('User', foreign_keys=[updated_by], backref='updated_items')
+    receiving_data = db.relationship('ReceivingData', backref='item', lazy=True)
 
 class ReceivingData(db.Model):
+    __tablename__ = 'receiving_data'
+    
     id = db.Column(db.Integer, primary_key=True)
-    item_id = db.Column(db.Integer, db.ForeignKey('item_number.id'), nullable=False)
+    item_number = db.Column(db.String(50), db.ForeignKey('item_number.item_number'), nullable=False)
     receiving_no = db.Column(db.String(20), unique=True, nullable=False)
     tracking_number = db.Column(db.String(50))
     lot_no = db.Column(db.String(50))
     po_no = db.Column(db.String(50))
     total_units_vendor = db.Column(db.Integer)
     total_storage_containers = db.Column(db.Integer)
-    exp_date = db.Column(db.String(20))
+    exp_date = db.Column(db.Date)
     ncmr = db.Column(db.String(5))
     total_units_received = db.Column(db.Integer)
     temp_device_in_alarm = db.Column(db.String(20))
+    ncmr2 = db.Column(db.String(5))
     temp_device_deactivated = db.Column(db.String(5))
     temp_device_returned_to_courier = db.Column(db.String(5))
-    comments_for_520b = db.Column(db.String(200))
+    comments_for_520b = db.Column(db.Text)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_receiving_data')
+    updater = db.relationship('User', foreign_keys=[updated_by], backref='updated_receiving_data')

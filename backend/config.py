@@ -1,7 +1,11 @@
 import os
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///app.db'
+
+    # Print current connection string (remove password before committing)
+    print("Database URL:", 'postgresql://postgres:Gom%40thinger123@localhost:5432/inventory_db')
+
+    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:Gom%40thinger123@localhost:5432/inventory_db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = 'dev-key-123'
     JWT_SECRET_KEY = 'jwt-key-123'

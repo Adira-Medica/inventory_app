@@ -1,29 +1,41 @@
 // src/components/Login.js
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import api from '../api/axios';
 
 const Login = () => {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const { login } = useAuth();
+  const [credentials, setCredentials] = useState({
+    username: '',
+    password: ''
+  });
+
+  // Only check once when component mounts
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/landing', { replace: true });
+    }
+  }, [navigate]); // Add navigate to dependencies
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    
     try {
-      await login(credentials);
-      // Redirect to the page they tried to visit or dashboard
-      const from = location.state?.from?.pathname || '/';
-      navigate(from);
-      toast.success('Welcome back!');
+      const response = await api.post('/auth/login', credentials);
+      
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        toast.success('Login successful!');
+        navigate('/landing', { replace: true });
+      } else {
+        throw new Error('No token received');
+      }
     } catch (error) {
-      toast.error('Invalid credentials, please try again.');
-    } finally {
-      setLoading(false);
+      console.error('Login error:', error);
+      localStorage.removeItem('token');
+      toast.error(error.response?.data?.error || 'Login failed');
     }
   };
 
@@ -33,30 +45,35 @@ const Login = () => {
         <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Sign in to your account
         </h2>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <input
-            type="text"
-            required
-            value={credentials.username}
-            onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-            placeholder="Username"
-            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-          />
-          <input
-            type="password"
-            required
-            value={credentials.password}
-            onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-            placeholder="Password"
-            className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <input
+              type="text"
+              value={credentials.username}
+              onChange={(e) => setCredentials({...credentials, username: e.target.value})}
+              placeholder="Username"
+              required
+              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              value={credentials.password}
+              onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+              placeholder="Password"
+              required
+              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <button
+              type="submit"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Sign in
+            </button>
+          </div>
         </form>
       </div>
     </div>

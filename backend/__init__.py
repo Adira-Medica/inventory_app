@@ -3,6 +3,7 @@ from flask import Flask
 from flask_migrate import Migrate # type: ignore
 from .config import Config  # Note the dot before config
 from .extensions import db, jwt, cors  # Note the dot before extensions
+from .utils.error_handlers import register_error_handlers
 
 migrate = Migrate()
 
@@ -21,6 +22,9 @@ def create_app():
         }
     })
     migrate.init_app(app, db)
+
+    # Register error handlers
+    register_error_handlers(app)  # Add this line
     
     # Register blueprints
     from .routes import auth, form, item, receiving

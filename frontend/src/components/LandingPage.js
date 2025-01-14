@@ -8,9 +8,23 @@ import {
   PlusCircleIcon, 
   DocumentDuplicateIcon 
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-toastify';
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+
+  const handleCardClick = (path) => {
+    console.log('Card clicked, path:', path);
+    if (!token) {
+      console.log('No token found');
+      toast.error('Please login first');
+      navigate('/login');
+      return;
+    }
+    console.log('Navigating to:', path);
+    navigate(path);
+  };
 
   const cards = [
     {
@@ -99,7 +113,7 @@ const LandingPage = () => {
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gray-50"
@@ -135,14 +149,14 @@ const LandingPage = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {cards.map((card, index) => (
+          {cards.map((card) => (
             <motion.div
               key={card.title}
               variants={cardVariants}
               whileHover="hover"
               whileTap="tap"
-              onClick={() => navigate(card.path)}
               className="cursor-pointer"
+              onClick={() => handleCardClick(card.path)}
             >
               <div className="relative bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className={`${card.color} absolute top-0 left-0 w-2 h-full`} />
