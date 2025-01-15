@@ -22,9 +22,7 @@ def create_receiving():
 @jwt_required()
 def get_receiving():
     try:
-        print("Fetching receiving data...")
-        receiving_data = ReceivingData.query.all()
-        print(f"Found {len(receiving_data)} receiving records")
+        receiving_data = ReceivingData.query.order_by(ReceivingData.display_order).all()
         
         return jsonify([{
             'id': rd.id,
@@ -42,7 +40,9 @@ def get_receiving():
             'ncmr2': rd.ncmr2,
             'temp_device_deactivated': rd.temp_device_deactivated,
             'temp_device_returned_to_courier': rd.temp_device_returned_to_courier,
-            'comments_for_520b': rd.comments_for_520b
+            'comments_for_520b': rd.comments_for_520b,
+            'is_obsolete': rd.is_obsolete,
+            'display_order': rd.display_order
         } for rd in receiving_data]), 200
             
     except Exception as e:
@@ -62,23 +62,56 @@ def update_receiving(id):
     try:
         receiving = ReceivingData.query.get_or_404(id)
         data = request.get_json()
-
-        print(f"Updating receiving {id} with data:", data)
+        
+        # Preserve display_order
+        current_display_order = receiving.display_order
         
         for key, value in data.items():
-            if hasattr(receiving, key) and key not in ['id', 'created_at', 'created_by']:
-                print(f"Setting {key} to {value}")  # Debug log
+            if hasattr(receiving, key) and key != 'display_order':
                 setattr(receiving, key, value)
         
-        receiving.updated_at = datetime.utcnow()
-        current_user = get_jwt_identity()
-        receiving.updated_by = current_user['id']
+        # Keep the original display_order
+        receiving.display_order = current_display_order
         
         db.session.commit()
         return jsonify({'message': 'Receiving data updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
-        import traceback
-        error_traceback = traceback.format_exc()
-        print("Error updating receiving:", error_traceback)  # Debug log
+        return jsonify({'error': str(e)}), 500
+    
+@bp.route('/get/<receiving_no>', methods=['GET'])
+@jwt_required()
+def get_receiving_detail(receiving_no):
+    try:
+        receiving = ReceivingData.query.filter_by(receiving_no=receiving_no).first()
+        if not receiving:
+            return jsonify({'error': 'Receiving data not found'}), 404
+            
+        return jsonify({
+            'id': receiving.id,
+            'receiving_no': receiving.receiving_no,
+            'tracking_number': receiving.tracking_number,
+            'lot_no': receiving.lot_no,
+            'po_no': receiving.po_no,
+            'total_units_vendor': receiving.total_units_vendor,
+            'total_storage_containers': receiving.total_storage_containers,
+            'exp_date': receiving.exp_date,
+            'ncmr': receiving.ncmr
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/toggle-obsolete/<int:id>', methods=['PUT'])
+@jwt_required()
+def toggle_receiving_obsolete(id):
+    try:
+        receiving = ReceivingData.query.get_or_404(id)
+        receiving.is_obsolete = not receiving.is_obsolete
+        db.session.commit()
+        return jsonify({
+            'message': 'Receiving data obsolete status updated',
+            'is_obsolete': receiving.is_obsolete
+        })
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500

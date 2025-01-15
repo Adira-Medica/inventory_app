@@ -8,17 +8,28 @@ const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
 
   useEffect(() => {
     // Remove unnecessary fields and prepare form data
-    const { id, isVoid, type: dataType, ...rest } = data;
+    const { id, isVoid, type: dataType, originalIndex, ...rest } = data;
     setFormData(rest);
   }, [data]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const endpoint = type === 'items' ? `/item/update/${data.id}` : `/receiving/update/${data.id}`;
-      await api.put(endpoint, formData);
+      const endpoint = type === 'items' 
+        ? `/item/update/${data.id}`
+        : `/receiving/update/${data.id}`;
+
+      const response = await api.put(endpoint, formData);
+
+      // Pass the complete updated data back
+      onUpdate({
+        ...data,           // Keep existing data
+        ...formData,       // Add updated fields
+        id: data.id,       // Ensure ID is preserved
+        display_order: data.display_order  // Preserve original index
+      });
+
       toast.success(`${type === 'items' ? 'Item' : 'Receiving data'} updated successfully`);
-      onUpdate();
       onClose();
     } catch (error) {
       console.error('Update error:', error);
@@ -28,18 +39,18 @@ const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
 
   const renderField = (key, value) => {
     // Fields to exclude from editing
-    if (['id', 'isVoid', 'type', 'created_at', 'updated_at', 'created_by', 'updated_by'].includes(key)) {
+    if (['id', 'isVoid', 'type', 'created_at', 'updated_at', 'created_by', 'updated_by', 'originalIndex'].includes(key)) {
       return null;
     }
 
     // Determine field type
     const isDateField = key === 'exp_date';
     const isNumberField = [
-      'max_exposure_time', 
-      'temper_time', 
-      'working_exposure_time', 
-      'total_units_vendor', 
-      'total_units_received', 
+      'max_exposure_time',
+      'temper_time',
+      'working_exposure_time',
+      'total_units_vendor',
+      'total_units_received',
       'total_storage_containers'
     ].includes(key);
     const isSelectField = ['controlled', 'randomized', 'sequential_numbers', 'ncmr', 'ncmr2'].includes(key);
@@ -91,10 +102,12 @@ const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
             ×
           </button>
         </div>
+
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(formData).map(([key, value]) => renderField(key, value))}
           </div>
+
           <div className="flex justify-end space-x-2 mt-6">
             <button
               type="button"

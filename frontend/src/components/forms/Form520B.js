@@ -1,7 +1,6 @@
 // src/components/forms/Form520B.js
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { mockItemData, mockReceivingData } from '../../mockData';
 import api from '../../api/axios';
 
 const Form520B = () => {
@@ -11,6 +10,7 @@ const Form520B = () => {
     checkboxes: {},
     selectedDateType: '',
     dateValue: '',
+    comments: '',
     deliveryAcceptance: {
       "Material placed in storage as documented above": false,
       "Discrepancies and/or damaged documented on the shipping paperwork": false,
@@ -38,51 +38,56 @@ const Form520B = () => {
   const [receivingOptions, setReceivingOptions] = useState([]);
   const [selectedItemData, setSelectedItemData] = useState(null);
   const [selectedReceivingData, setSelectedReceivingData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Using mock data for now
-    setItemOptions(mockItemData);
-    setReceivingOptions(mockReceivingData);
-
-    // Pre-fill form with first item and receiving number (for testing)
-    if (mockItemData.length && mockReceivingData.length) {
-      setFormData(prev => ({
-          ...prev,
-          ItemNo: mockItemData[0].item_number,
-          ReceivingNo: mockReceivingData[0].receiving_no,
-          checkboxes: {
-              "Material placed in storage as documented above": true,
-              "Supporting documentation received attached": true,
-              "Purchase Order": true,
-              "Packing Slip": true
-          },
-          selectedDateType: 'Expiration Date',
-          dateValue: '12/31/2024'
-      }));
-    }
+    fetchOptions();
   }, []);
 
-  const handleItemSelect = (selectedItemNo) => {
-    const selectedItem = itemOptions.find(item => item.item_number === selectedItemNo);
-    if (selectedItem) {
-      setSelectedItemData(selectedItem);
-      setFormData(prev => ({
-        ...prev,
-        ItemNo: selectedItem.item_number
-      }));
+  const fetchOptions = async () => {
+    try {
+      setIsLoading(true);
+      const [itemResponse, receivingResponse] = await Promise.all([
+        api.get('/item/numbers'),
+        api.get('/receiving/numbers')
+      ]);
+
+      setItemOptions(itemResponse.data);
+      setReceivingOptions(receivingResponse.data);
+    } catch (error) {
+      console.error("Error fetching options:", error);
+      toast.error("Error loading data");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleReceivingSelect = (selectedReceivingNo) => {
-    const selectedReceiving = receivingOptions.find(
-      rec => rec.receiving_no === selectedReceivingNo
-    );
-    if (selectedReceiving) {
-      setSelectedReceivingData(selectedReceiving);
+  const handleItemSelect = async (selectedItemNo) => {
+    try {
+      const response = await api.get(`/item/get/${selectedItemNo}`);
+      setSelectedItemData(response.data);
       setFormData(prev => ({
         ...prev,
-        ReceivingNo: selectedReceiving.receiving_no
+        ItemNo: selectedItemNo
       }));
+    } catch (error) {
+      console.error("Error fetching item details:", error);
+      toast.error("Error loading item details");
+    }
+  };
+
+  const handleReceivingSelect = async (selectedReceivingNo) => {
+    try {
+      const response = await api.get(`/receiving/get/${selectedReceivingNo}`);
+      setSelectedReceivingData(response.data);
+      setFormData(prev => ({
+        ...prev,
+        ReceivingNo: selectedReceivingNo
+      }));
+    } catch (error) {
+      console.error("Error fetching receiving details:", error);
+      toast.error("Error loading receiving details");
     }
   };
 
@@ -104,159 +109,90 @@ const Form520B = () => {
     }));
   };
 
-//   const handleGeneratePDF = async (e) => {
-//     e.preventDefault();
-
-//     // Create form data from selected mock data
-//     const selectedItem = itemOptions.find(item => item.item_number === formData.ItemNo);
-//     const selectedReceiving = receivingOptions.find(rec => rec.receiving_no === formData.ReceivingNo);
-
-//     if (!selectedItem || !selectedReceiving) {
-//         toast.error('Please select both Item Number and Receiving Number');
-//         return;
-//     }
-
-//     // Prepare data for PDF generation
-//     const pdfData = {
-//         'Item No.': selectedItem?.item_number || '',
-//         'Item Description': selectedItem?.description || '',
-//         'Client Name': selectedItem?.client || '',
-//         'Protocol No.': selectedItem?.protocol_number || '',
-//         'Vendor': selectedItem?.vendor || '',
-//         'UoM': selectedItem?.uom || '',
-//         'Storage Conditions:Temperature': selectedItem?.temp_storage_conditions || '',
-//         'Other': selectedItem?.other_storage_conditions || '',
-        
-//         // Receiving data
-//         'RN': selectedReceiving?.receiving_no || '',
-//         'Tracking No.': selectedReceiving?.tracking_number || '',
-//         'Lot No.': selectedReceiving?.lot_no || '',
-//         'PO No.': selectedReceiving?.po_no || '',
-//         'Total Units (vendor count)': selectedReceiving?.total_units_vendor || '',
-//         'Total Storage Containers': selectedReceiving?.total_storage_containers || '',
-        
-//         // Form checkboxes
-//         'Material placed in storage': formData.checkboxes['Material placed in storage as documented above'] || false,
-//         'Discrepancies documented': formData.checkboxes['Discrepancies and/or damaged documented on the shipping paperwork'] || false,
-//         'Supporting documentation': formData.checkboxes['Supporting documentation received attached'] || false,
-//         'Shipment REJECTED': formData.checkboxes['Shipment REJECTED. Reason documented on the shipping paperwork'] || false,
-        
-//         // Document verification
-//         'Purchase Order': formData.checkboxes['Purchase Order'] || false,
-//         'Packing Slip': formData.checkboxes['Packing Slip'] || false,
-//         'Bill of Lading': formData.checkboxes['Bill of Lading'] || false,
-//         'CoC/CoA': formData.checkboxes['CoC/CoA'] || false,
-//         'SDS #': formData.checkboxes['SDS #'] || false,
-//         'Invoice': formData.checkboxes['Invoice'] || false,
-//         'Other (Specify)': formData.checkboxes['Other (Specify)'] || false,
-
-//         // Date information
-//         [formData.selectedDateType]: formData.dateValue || '',
-        
-//         // NCMR Status
-//         'NCMR': selectedReceiving?.ncmr || 'N/A',
-//         'Comments': selectedReceiving?.comments_for_520b || ''
-//     };
-
-//     try {
-//       const response = await api.post('/form/generate-pdf/520B', pdfData, {
-//           responseType: 'blob'
-//       });
-
-//       // Create blob and download
-//       const file = new Blob([response.data], { type: 'application/pdf' });
-//       const fileURL = URL.createObjectURL(file);
-//       const link = document.createElement('a');
-//       link.href = fileURL;
-//       link.download = `520B_${pdfData.ReceivingNo}.pdf`;
-//       document.body.appendChild(link);
-//       link.click();
-//       document.body.removeChild(link);
-//       URL.revokeObjectURL(fileURL);
-
-//       // Mock PDF generation for now
-//       toast.success('PDF Generated Successfully');
-//     } catch (error) {
-//       console.error('PDF Data being sent:', pdfData);
-//       console.error('Error generating PDF:', error);
-//       toast.error('Failed to generate PDF');
-//     }
-// };
-
   const handleGeneratePDF = async (e) => {
     e.preventDefault();
-
-    const selectedItem = itemOptions.find(item => item.item_number === formData.ItemNo);
-    const selectedReceiving = receivingOptions.find(rec => rec.receiving_no === formData.ReceivingNo);
-
-    const pdfData = {
-        'Item No': formData.ItemNo,
-        'Tracking No': formData.TrackingNo,
-        'Client Name': selectedItem?.client || '',
-        'Item Description': selectedItem?.description || '',
-        'Storage Conditions:Temperature': selectedItem?.temp_storage_conditions || '',
-        'Other': selectedItem?.other_storage_conditions || '',
-        'RN': formData.ReceivingNo,
-        'PO No': formData.PO_No,
-        'Protocol No': selectedItem?.protocol_number || '',
-        'Vendor': selectedItem?.vendor || '',
-        'UoM': selectedItem?.uom || '',
-        'Total Units (vendor count)': selectedReceiving?.total_units_vendor || '',
-        'Total Storage Containers': selectedReceiving?.total_storage_containers || '',
-        'Lot No': selectedReceiving?.lot_no || '',
-        
-        // Checkboxes for delivery acceptance
-        'Material placed in storage as documented above': formData.checkboxes['Material placed in storage as documented above'] || false,
-        'Discrepancies and/or damaged documented on the shipping paperwork': formData.checkboxes['Discrepancies and/or damaged documented on the shipping paperwork'] || false,
-        'Supporting documentation received attached': formData.checkboxes['Supporting documentation received attached'] || false,
-        'Shipment REJECTED. Reason documented on the shipping paperwork': formData.checkboxes['Shipment REJECTED. Reason documented on the shipping paperwork'] || false,
-
-        // Document verification checkboxes
-        'Purchase Order': formData.checkboxes['Purchase Order'] || false,
-        'Packing Slip': formData.checkboxes['Packing Slip'] || false,
-        'Bill of Lading': formData.checkboxes['Bill of Lading'] || false,
-        'CoC/CoA': formData.checkboxes['CoC/CoA'] || false,
-        'SDS #': formData.checkboxes['SDS #'] || false,
-        'Invoice': formData.checkboxes['Invoice'] || false,
-        'Other (Specify)': formData.checkboxes['Other (Specify)'] || false,
-
-        // Date type and value
-        [formData.selectedDateType]: formData.dateValue,
-        
-        // NCMR and comments
-        'NCMR': selectedReceiving?.ncmr || 'N/A',
-        'Comments': formData.comments || ''
-    };
-
-    console.log('Sending PDF data:', pdfData);
+    
+    if (!selectedItemData || !selectedReceivingData) {
+      toast.error('Please select both Item Number and Receiving Number');
+      return;
+    }
 
     try {
-        const response = await api.post('/form/generate-pdf/520B', pdfData, {
-            responseType: 'blob'
-        });
+      setIsSubmitting(true);
+      const pdfData = {
+        'Item No': formData.ItemNo,
+        'Tracking No': selectedReceivingData.tracking_number,
+        'Client Name': selectedItemData.client,
+        'Item Description': selectedItemData.description,
+        'Storage Conditions:Temperature': selectedItemData.temp_storage_conditions,
+        'Other': selectedItemData.other_storage_conditions,
+        'RN': formData.ReceivingNo,
+        'Lot No': selectedReceivingData.lot_no,
+        'PO No': selectedReceivingData.po_no,
+        'Protocol No': selectedItemData.protocol_number,
+        'Vendor': selectedItemData.vendor,
+        'UoM': selectedItemData.uom,
+        'Total Units (vendor count)': selectedReceivingData.total_units_vendor,
+        'Total Storage Containers': selectedReceivingData.total_storage_containers,
 
-        const file = new Blob([response.data], { type: 'application/pdf' });
-        const fileURL = URL.createObjectURL(file);
-        const link = document.createElement('a');
-        link.href = fileURL;
-        link.download = `520B_${formData.ReceivingNo}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(fileURL);
+        // Checkboxes
+        ...Object.entries(formData.deliveryAcceptance).reduce((acc, [key, value]) => ({
+          ...acc,
+          [key]: value
+        }), {}),
+        ...Object.entries(formData.documentVerification).reduce((acc, [key, value]) => ({
+          ...acc,
+          [key]: value
+        }), {}),
+        ...Object.entries(formData.issuesSection).reduce((acc, [key, value]) => ({
+          ...acc,
+          [key]: value
+        }), {}),
 
-        toast.success('PDF generated successfully!');
+        // Date information
+        [formData.selectedDateType]: formData.dateValue,
+
+        // Additional data
+        'NCMR': selectedReceivingData.ncmr || 'N/A',
+        'Comments': formData.comments || ''
+      };
+
+      const response = await api.post('/form/generate-pdf/520B', pdfData, {
+        responseType: 'blob'
+      });
+
+      const file = new Blob([response.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = `520B_${formData.ReceivingNo}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(fileURL);
+
+      toast.success('PDF Generated Successfully');
     } catch (error) {
-        console.error('Error generating PDF:', error);
-        toast.error('Failed to generate PDF');
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <form onSubmit={handleGeneratePDF} className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-center mb-6">Generate Form 520B</h2>
-
+        
         <div className="space-y-6">
           {/* Dropdowns Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -354,6 +290,7 @@ const Form520B = () => {
                 </label>
               ))}
             </div>
+
             {formData.selectedDateType && (
               <input
                 type="text"
@@ -365,13 +302,32 @@ const Form520B = () => {
             )}
           </div>
 
+          {/* Comments Section */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Comments
+            </label>
+            <textarea
+              value={formData.comments}
+              onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              rows={3}
+            />
+          </div>
+
           {/* Submit Button */}
           <div className="flex justify-end mt-6">
             <button
               type="submit"
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              disabled={isSubmitting}
+              className={`
+                bg-indigo-600 text-white px-4 py-2 rounded-md 
+                hover:bg-indigo-700 focus:outline-none focus:ring-2 
+                focus:ring-indigo-500 
+                ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
+              `}
             >
-              Generate PDF
+              {isSubmitting ? 'Generating PDF...' : 'Generate PDF'}
             </button>
           </div>
         </div>

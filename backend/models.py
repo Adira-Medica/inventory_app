@@ -53,6 +53,8 @@ class ItemNumber(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     is_active = db.Column(db.Boolean, default=True)
+    is_obsolete = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer)
     
     # Relationships
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_items')
@@ -83,6 +85,8 @@ class ReceivingData(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     is_active = db.Column(db.Boolean, default=True)
+    is_obsolete = db.Column(db.Boolean, default=False)
+    display_order = db.Column(db.Integer)
     
     # Relationships
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_receiving_data')

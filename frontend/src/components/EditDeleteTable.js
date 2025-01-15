@@ -15,24 +15,27 @@ const EditDeleteTable = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingData, setEditingData] = useState({});
 
-  useEffect(() => {
-    fetchData();
-    setCurrentPage(1);
-  }, [activeTab]);
-
   const fetchData = async () => {
     setIsLoading(true);
     try {
       if (activeTab === 'items') {
-        console.log('Fetching item data...');
         const response = await api.get('/item/get');
-        console.log('Received item data:', response.data);
-        setItemData(response.data.map(item => ({ ...item, isVoid: false })));
+        if (response.data && Array.isArray(response.data)) {
+          const itemsWithOrder = response.data.map((item, index) => ({
+            ...item,
+            originalIndex: index
+          }));
+          setItemData(itemsWithOrder);
+        }
       } else {
-        console.log('Fetching receiving data...');
         const response = await api.get('/receiving/get');
-        console.log('Received receiving data:', response.data);
-        setReceivingData(response.data.map(item => ({ ...item, isVoid: false })));
+        if (response.data && Array.isArray(response.data)) {
+          const receivingWithOrder = response.data.map((item, index) => ({
+            ...item,
+            originalIndex: index
+          }));
+          setReceivingData(receivingWithOrder);
+        }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -42,10 +45,79 @@ const EditDeleteTable = () => {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+    setCurrentPage(1);
+  }, [activeTab]);
+
+  const handleObsolete = async (id) => {
+    try {
+      const endpoint = activeTab === 'items' 
+        ? `/item/toggle-obsolete/${id}`
+        : `/receiving/toggle-obsolete/${id}`;
+      
+      await api.put(endpoint);
+      
+      if (activeTab === 'items') {
+        setItemData(prevData => 
+          prevData.map(item => 
+            item.id === id 
+              ? { ...item, is_obsolete: !item.is_obsolete }
+              : item
+          )
+        );
+      } else {
+        setReceivingData(prevData => 
+          prevData.map(item => 
+            item.id === id 
+              ? { ...item, is_obsolete: !item.is_obsolete }
+              : item
+          )
+        );
+      }
+
+      toast.success(`${activeTab === 'items' ? 'Item' : 'Receiving data'} obsolete status updated`);
+    } catch (error) {
+      console.error('Error updating obsolete status:', error);
+      toast.error('Failed to update obsolete status');
+    }
+  };
+
+  const handleEdit = (id, type) => {
+    const data = type === 'items'
+      ? itemData.find(item => item.id === id)
+      : receivingData.find(item => item.id === id);
+   
+    setEditingData({ ...data, type });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdate = (updatedData) => {
+    if (!updatedData?.id) return;
+
+    if (activeTab === 'items') {
+      setItemData(prevData => 
+        prevData.map(item => 
+          item.id === updatedData.id ? { ...updatedData, display_order: item.display_order } : item
+        )
+      );
+    } else {
+      setReceivingData(prevData => 
+        prevData.map(item => 
+          item.id === updatedData.id ? { ...updatedData, display_order: item.display_order } : item
+        )
+      );
+    }
+  };
+
   const getCurrentData = () => {
     const data = activeTab === 'items' ? itemData : receivingData;
+    if (!data?.length) return [];
+    
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return data.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    const sortedData = [...data].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)
+  );
+    return sortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   };
 
   const totalPages = Math.ceil(
@@ -63,8 +135,8 @@ const EditDeleteTable = () => {
       <button
         onClick={() => onObsolete(id)}
         className={`px-3 py-1 rounded text-white ${
-          isObsolete 
-            ? 'bg-gray-500 hover:bg-gray-700' 
+          isObsolete
+            ? 'bg-gray-500 hover:bg-gray-700'
             : 'bg-red-500 hover:bg-red-700'
         }`}
       >
@@ -76,7 +148,7 @@ const EditDeleteTable = () => {
   const PaginationControls = () => (
     <div className="flex justify-between items-center mt-4 py-4 px-6">
       <div className="text-sm text-gray-700">
-        Showing page {currentPage} of {totalPages}
+        Showing page {currentPage} of {totalPages || 1}
       </div>
       <div className="flex space-x-2">
         <button
@@ -91,7 +163,7 @@ const EditDeleteTable = () => {
           Previous
         </button>
         <div className="flex space-x-1">
-          {[...Array(totalPages)].map((_, index) => (
+          {[...Array(totalPages || 0)].map((_, index) => (
             <button
               key={index + 1}
               onClick={() => setCurrentPage(index + 1)}
@@ -106,7 +178,7 @@ const EditDeleteTable = () => {
           ))}
         </div>
         <button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages || 1))}
           disabled={currentPage === totalPages}
           className={`px-3 py-1 rounded ${
             currentPage === totalPages
@@ -120,151 +192,138 @@ const EditDeleteTable = () => {
     </div>
   );
 
-  const handleObsolete = (id) => {
-    if (activeTab === 'items') {
-      setItemData(itemData.map(item => 
-        item.id === id ? { ...item, isVoid: !item.isVoid } : item
-      ));
-      toast.success(`Item ${itemData.find(item => item.id === id)?.item_number} ${!itemData.find(item => item.id === id)?.isVoid ? 'marked as obsolete' : 'unmarked as obsolete'}`);
-    } else {
-      setReceivingData(receivingData.map(item => 
-        item.id === id ? { ...item, isVoid: !item.isVoid } : item
-      ));
-      toast.success(`Receiving data ${receivingData.find(item => item.id === id)?.receiving_no} ${!receivingData.find(item => item.id === id)?.isVoid ? 'marked as obsolete' : 'unmarked as obsolete'}`);
+  const ItemTable = () => {
+    const data = getCurrentData();
+    if (!data?.length) {
+      return <div className="p-4 text-center text-gray-500">No items found</div>;
     }
+
+    return (
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            {[
+              'Item Number',
+              'Description',
+              'Client',
+              'Protocol Number',
+              'Vendor',
+              'UOM',
+              'Controlled',
+              'Temp Storage Conditions',
+              'Other Storage Conditions',
+              'Max Exposure Time',
+              'Temper Time',
+              'Working Exposure Time',
+              'Vendor Code Rev',
+              'Randomized',
+              'Sequential Numbers',
+              'Study Type',
+              'Actions'
+            ].map((header) => (
+              <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {data.map((item) => (
+            <tr key={item.id} className={item.is_obsolete ? 'bg-red-100' : ''}>
+              <td className="px-6 py-4 whitespace-nowrap">{item.item_number}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.client}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.protocol_number}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.vendor}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.uom}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.controlled}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.temp_storage_conditions}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.other_storage_conditions}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.max_exposure_time}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.temper_time}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.working_exposure_time}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.vendor_code_rev}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.randomized}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.sequential_numbers}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{item.study_type}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <TableActions
+                  id={item.id}
+                  onEdit={(id) => handleEdit(id, 'items')}
+                  isObsolete={item.is_obsolete}
+                  onObsolete={handleObsolete}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
   };
 
-  const ItemTable = () => (
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          {[
-            'Item Number',
-            'Description',
-            'Client',
-            'Protocol Number',
-            'Vendor',
-            'UOM',
-            'Controlled',
-            'Temp Storage Conditions',
-            'Other Storage Conditions',
-            'Max Exposure Time',
-            'Temper Time',
-            'Working Exposure Time',
-            'Vendor Code Rev',
-            'Randomized',
-            'Sequential Numbers',
-            'Study Type',
-            'Actions'
-          ].map((header) => (
-            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              {header}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {getCurrentData().map((item) => (
-          <tr key={item.id} className={item.isVoid ? 'bg-red-100' : ''}>
-            <td className="px-6 py-4 whitespace-nowrap">{item.item_number}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.client}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.protocol_number}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.vendor}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.uom}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.controlled}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.temp_storage_conditions}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.other_storage_conditions}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.max_exposure_time}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.temper_time}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.working_exposure_time}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.vendor_code_rev}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.randomized}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.sequential_numbers}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{item.study_type}</td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <TableActions
-                id={item.id}
-                onEdit={(id) => handleEdit(id, 'items')}
-                isObsolete={item.isVoid}
-                onObsolete={handleObsolete}
-              />
-            </td>
+  const ReceivingTable = () => {
+    const data = getCurrentData();
+    if (!data?.length) {
+      return <div className="p-4 text-center text-gray-500">No receiving data found</div>;
+    }
+
+    return (
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            {[
+              'Receiving No',
+              'Tracking Number',
+              'Lot No',
+              'PO No',
+              'Total Units Vendor',
+              'Total Storage Containers',
+              'Exp Date',
+              'NCMR',
+              'Total Units Received',
+              'Temp Device in Alarm',
+              'NCMR2',
+              'Temp Device Deactivated',
+              'Temp Device Returned to Courier',
+              'Comments for 520B',
+              'Actions'
+            ].map((header) => (
+              <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {header}
+              </th>
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-
-  const ReceivingTable = () => (
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          {[
-            'Receiving No',
-            'Tracking Number',
-            'Lot No',
-            'PO No',
-            'Total Units Vendor',
-            'Total Storage Containers',
-            'Exp Date',
-            'NCMR',
-            'Total Units Received',
-            'Temp Device in Alarm',
-            'NCMR2',
-            'Temp Device Deactivated',
-            'Temp Device Returned to Courier',
-            'Comments for 520B',
-            'Actions'
-          ].map((header) => (
-            <th key={header} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              {header}
-            </th>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {data.map((receiving) => (
+            <tr key={receiving.id} className={receiving.is_obsolete ? 'bg-red-100' : ''}>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.receiving_no}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.tracking_number}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.lot_no}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.po_no}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.total_units_vendor}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.total_storage_containers}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.exp_date}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.ncmr}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.total_units_received}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.temp_device_in_alarm}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.ncmr2}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.temp_device_deactivated}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.temp_device_returned_to_courier}</td>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.comments_for_520b}</td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <TableActions
+                  id={receiving.id}
+                  onEdit={(id) => handleEdit(id, 'receiving')}
+                  isObsolete={receiving.is_obsolete}
+                  onObsolete={handleObsolete}
+                />
+              </td>
+            </tr>
           ))}
-        </tr>
-      </thead>
-      <tbody className="bg-white divide-y divide-gray-200">
-        {getCurrentData().map((receiving) => (
-          <tr key={receiving.id} className={receiving.isVoid ? 'bg-red-100' : ''}>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.receiving_no}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.tracking_number}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.lot_no}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.po_no}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.total_units_vendor}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.total_storage_containers}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.exp_date}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.ncmr}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.total_units_received}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.temp_device_in_alarm}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.ncmr2}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.temp_device_deactivated}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.temp_device_returned_to_courier}</td>
-            <td className="px-6 py-4 whitespace-nowrap">{receiving.comments_for_520b}</td>
-            <td className="px-6 py-4 whitespace-nowrap">
-              <TableActions
-                id={receiving.id}
-                onEdit={(id) => handleEdit(id, 'receiving')}
-                isObsolete={receiving.isVoid}
-                onObsolete={handleObsolete}
-              />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-
-  const handleEdit = (id, type) => {
-    const data = type === 'items' 
-      ? itemData.find(item => item.id === id)
-      : receivingData.find(item => item.id === id);
-    
-    setEditingData({ ...data, type });
-    setEditModalOpen(true);
-  };
-
-  const handleUpdate = async () => {
-    fetchData(); // Refresh data after update
+        </tbody>
+      </table>
+    );
   };
 
   return (
@@ -273,7 +332,10 @@ const EditDeleteTable = () => {
         <div className="flex justify-between items-center mb-6">
           <div className="flex space-x-4">
             <button
-              onClick={() => setActiveTab('items')}
+              onClick={() => {
+                setActiveTab('items');
+                setCurrentPage(1);
+              }}
               className={`px-4 py-2 rounded-lg ${
                 activeTab === 'items'
                   ? 'bg-blue-500 text-white'
@@ -283,7 +345,10 @@ const EditDeleteTable = () => {
               Item Data
             </button>
             <button
-              onClick={() => setActiveTab('receiving')}
+              onClick={() => {
+                setActiveTab('receiving');
+                setCurrentPage(1);
+              }}
               className={`px-4 py-2 rounded-lg ${
                 activeTab === 'receiving'
                   ? 'bg-blue-500 text-white'
@@ -294,6 +359,7 @@ const EditDeleteTable = () => {
             </button>
           </div>
         </div>
+
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             {isLoading ? (
@@ -303,18 +369,19 @@ const EditDeleteTable = () => {
             ) : (
               <>
                 {activeTab === 'items' ? <ItemTable /> : <ReceivingTable />}
-                <PaginationControls />
+                {(activeTab === 'items' ? itemData : receivingData).length > 0 && <PaginationControls />}
               </>
             )}
+
             {editModalOpen && (
-        <EditModal
-          isOpen={editModalOpen}
-          onClose={() => setEditModalOpen(false)}
-          data={editingData}
-          type={activeTab}
-          onUpdate={handleUpdate}
-        />
-      )}
+              <EditModal
+                isOpen={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                data={editingData}
+                type={activeTab}
+                onUpdate={handleUpdate}
+              />
+            )}
           </div>
         </div>
       </div>
