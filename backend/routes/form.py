@@ -98,3 +98,42 @@ def generate_520b():
     except Exception as e:
         print(f"Error in route: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+
+@bp.route('/generate-pdf/501A', methods=['POST'])
+@jwt_required()
+def generate_501a_pdf():
+    try:
+        data = request.get_json()
+        
+        pdf_handler = PDFHandler()
+        output_path = pdf_handler.generate_501a_pdf(data)
+        
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f"501A_{data.get('ReceivingNo', 'unknown')}.pdf",
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        print(f"Error in PDF generation: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
+@bp.route('/generate-pdf/519A', methods=['POST'])
+@jwt_required()
+def generate_519a_pdf():
+    try:
+        data = request.get_json()
+        
+        pdf_handler = PDFHandler()
+        output_path = pdf_handler.generate_519a_pdf(data)
+        
+        return send_file(
+            output_path,
+            as_attachment=True,
+            download_name=f"519A_{data.get('ReceivingNo', 'unknown')}.pdf",
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        print(f"Error in PDF generation: {str(e)}")
+        return jsonify({'error': str(e)}), 500

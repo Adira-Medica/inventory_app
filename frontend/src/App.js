@@ -7,8 +7,10 @@ import LandingPage from './components/LandingPage';
 import EditDeleteTable from './components/EditDeleteTable';
 import AddDataForm from './components/AddDataForm';
 import Form520B from './components/forms/Form520B';
-import Form501A519A from './components/forms/Form501A519A';
+// import Form501A519A from './components/forms/Form501A519A';
+import Form519A from './components/forms/Form519A';
 import 'react-toastify/dist/ReactToastify.css';
+import Form501A from './components/forms/Form501A';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -66,7 +68,7 @@ function App() {
           path="/forms/501a" 
           element={
             <PrivateRoute>
-              <Form501A519A />
+              <Form501A />
             </PrivateRoute>
           } 
         />
@@ -74,7 +76,7 @@ function App() {
           path="/forms/519a" 
           element={
             <PrivateRoute>
-              <Form501A519A />
+              <Form519A />
             </PrivateRoute>
           } 
         />
