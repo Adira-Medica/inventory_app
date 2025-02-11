@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../api/axios';
+import SearchableSelect from '../common/SearchableSelect';
 
 const Form520B = () => {
   const [formData, setFormData] = useState({
@@ -53,8 +54,18 @@ const Form520B = () => {
         api.get('/receiving/numbers')
       ]);
 
-      setItemOptions(itemResponse.data);
-      setReceivingOptions(receivingResponse.data);
+      const itemOpts = itemResponse.data.map(item => ({
+        value: item.item_number,
+        label: `${item.item_number} - ${item.description}`
+      }));
+
+      const receivingOpts = receivingResponse.data.map(rec => ({
+        value: rec.receiving_no,
+        label: rec.receiving_no
+      }));
+
+      setItemOptions(itemOpts);
+      setReceivingOptions(receivingOpts);
     } catch (error) {
       console.error("Error fetching options:", error);
       toast.error("Error loading data");
@@ -63,13 +74,13 @@ const Form520B = () => {
     }
   };
 
-  const handleItemSelect = async (selectedItemNo) => {
+  const handleItemSelect = async (selectedValue) => {
     try {
-      const response = await api.get(`/item/get/${selectedItemNo}`);
+      const response = await api.get(`/item/get/${selectedValue}`);
       setSelectedItemData(response.data);
       setFormData(prev => ({
         ...prev,
-        ItemNo: selectedItemNo
+        ItemNo: selectedValue
       }));
     } catch (error) {
       console.error("Error fetching item details:", error);
@@ -77,13 +88,13 @@ const Form520B = () => {
     }
   };
 
-  const handleReceivingSelect = async (selectedReceivingNo) => {
+  const handleReceivingSelect = async (selectedValue) => {
     try {
-      const response = await api.get(`/receiving/get/${selectedReceivingNo}`);
+      const response = await api.get(`/receiving/get/${selectedValue}`);
       setSelectedReceivingData(response.data);
       setFormData(prev => ({
         ...prev,
-        ReceivingNo: selectedReceivingNo
+        ReceivingNo: selectedValue
       }));
     } catch (error) {
       console.error("Error fetching receiving details:", error);
@@ -111,7 +122,7 @@ const Form520B = () => {
 
   const handleGeneratePDF = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedItemData || !selectedReceivingData) {
       toast.error('Please select both Item Number and Receiving Number');
       return;
@@ -134,8 +145,6 @@ const Form520B = () => {
         'UoM': selectedItemData.uom,
         'Total Units (vendor count)': selectedReceivingData.total_units_vendor,
         'Total Storage Containers': selectedReceivingData.total_storage_containers,
-
-        // Checkboxes
         ...Object.entries(formData.deliveryAcceptance).reduce((acc, [key, value]) => ({
           ...acc,
           [key]: value
@@ -148,11 +157,7 @@ const Form520B = () => {
           ...acc,
           [key]: value
         }), {}),
-
-        // Date information
         [formData.selectedDateType]: formData.dateValue,
-
-        // Additional data
         'NCMR': selectedReceivingData.ncmr || 'N/A',
         'Comments': formData.comments || ''
       };
@@ -194,45 +199,25 @@ const Form520B = () => {
         <h2 className="text-2xl font-bold text-center mb-6">Generate Form 520B</h2>
         
         <div className="space-y-6">
-          {/* Dropdowns Section */}
+          {/* Item and Receiving Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Item Number
-              </label>
-              <select
-                value={formData.ItemNo}
-                onChange={(e) => handleItemSelect(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                required
-              >
-                <option value="">Select Item Number</option>
-                {itemOptions.map(item => (
-                  <option key={item.item_number} value={item.item_number}>
-                    {item.item_number} - {item.description}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="Item Number"
+              options={itemOptions}
+              value={formData.ItemNo}
+              onChange={handleItemSelect}
+              placeholder="Search item number..."
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Receiving Number
-              </label>
-              <select
-                value={formData.ReceivingNo}
-                onChange={(e) => handleReceivingSelect(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                required
-              >
-                <option value="">Select Receiving Number</option>
-                {receivingOptions.map(rec => (
-                  <option key={rec.receiving_no} value={rec.receiving_no}>
-                    {rec.receiving_no}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="Receiving Number"
+              options={receivingOptions}
+              value={formData.ReceivingNo}
+              onChange={handleReceivingSelect}
+              placeholder="Search receiving number..."
+              required
+            />
           </div>
 
           {/* Document Verification Section */}
@@ -321,9 +306,9 @@ const Form520B = () => {
               type="submit"
               disabled={isSubmitting}
               className={`
-                bg-indigo-600 text-white px-4 py-2 rounded-md 
-                hover:bg-indigo-700 focus:outline-none focus:ring-2 
-                focus:ring-indigo-500 
+                bg-indigo-600 text-white px-4 py-2 rounded-md
+                hover:bg-indigo-700 focus:outline-none focus:ring-2
+                focus:ring-indigo-500
                 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
               `}
             >

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../api/axios';
+import SearchableSelect from '../common/SearchableSelect';
 
 const Form519A = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,7 @@ const Form519A = () => {
       containerNo: '',
       totalUnitsPerContainer: ''
     },
-    drugMovements: [], // Array for the drug movement table entries
+    drugMovements: [],
     recordCreatedBy: '',
     dateCreated: ''
   });
@@ -49,8 +50,18 @@ const Form519A = () => {
         api.get('/receiving/numbers')
       ]);
 
-      setItemOptions(itemResponse.data);
-      setReceivingOptions(receivingResponse.data);
+      const itemOpts = itemResponse.data.map(item => ({
+        value: item.item_number,
+        label: `${item.item_number} - ${item.description}`
+      }));
+
+      const receivingOpts = receivingResponse.data.map(rec => ({
+        value: rec.receiving_no,
+        label: rec.receiving_no
+      }));
+
+      setItemOptions(itemOpts);
+      setReceivingOptions(receivingOpts);
     } catch (error) {
       console.error("Error fetching options:", error);
       toast.error("Error loading data");
@@ -59,13 +70,13 @@ const Form519A = () => {
     }
   };
 
-  const handleItemSelect = async (selectedItemNo) => {
+  const handleItemSelect = async (selectedValue) => {
     try {
-      const response = await api.get(`/item/get/${selectedItemNo}`);
+      const response = await api.get(`/item/get/${selectedValue}`);
       setSelectedItemData(response.data);
       setFormData(prev => ({
         ...prev,
-        ItemNo: selectedItemNo,
+        ItemNo: selectedValue,
         itemDescription: response.data.description,
         storageConditions: response.data.temp_storage_conditions,
         otherStorageConditions: response.data.other_storage_conditions,
@@ -82,13 +93,13 @@ const Form519A = () => {
     }
   };
 
-  const handleReceivingSelect = async (selectedReceivingNo) => {
+  const handleReceivingSelect = async (selectedValue) => {
     try {
-      const response = await api.get(`/receiving/get/${selectedReceivingNo}`);
+      const response = await api.get(`/receiving/get/${selectedValue}`);
       setSelectedReceivingData(response.data);
       setFormData(prev => ({
         ...prev,
-        ReceivingNo: selectedReceivingNo,
+        ReceivingNo: selectedValue,
         lotNo: response.data.lot_no,
         tempDeviceInfo: {
           onAlarm: response.data.temp_device_in_alarm || '',
@@ -127,7 +138,7 @@ const Form519A = () => {
   const updateDrugMovement = (index, field, value) => {
     setFormData(prev => ({
       ...prev,
-      drugMovements: prev.drugMovements.map((movement, i) => 
+      drugMovements: prev.drugMovements.map((movement, i) =>
         i === index ? { ...movement, [field]: value } : movement
       )
     }));
@@ -142,7 +153,7 @@ const Form519A = () => {
 
   const handleGeneratePDF = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedItemData || !selectedReceivingData) {
       toast.error('Please select both Item Number and Receiving Number');
       return;
@@ -184,48 +195,28 @@ const Form519A = () => {
         <h2 className="text-2xl font-bold text-center mb-6">Generate Form 519A</h2>
         
         <div className="space-y-6">
-          {/* Item and Receiving Selection */}
+          {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Item Number
-              </label>
-              <select
-                value={formData.ItemNo}
-                onChange={(e) => handleItemSelect(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                required
-              >
-                <option value="">Select Item Number</option>
-                {itemOptions.map(item => (
-                  <option key={item.item_number} value={item.item_number}>
-                    {item.item_number} - {item.description}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="Item Number"
+              options={itemOptions}
+              value={formData.ItemNo}
+              onChange={handleItemSelect}
+              placeholder="Search item number..."
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Receiving Number
-              </label>
-              <select
-                value={formData.ReceivingNo}
-                onChange={(e) => handleReceivingSelect(e.target.value)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                required
-              >
-                <option value="">Select Receiving Number</option>
-                {receivingOptions.map(rec => (
-                  <option key={rec.receiving_no} value={rec.receiving_no}>
-                    {rec.receiving_no}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SearchableSelect
+              label="Receiving Number"
+              options={receivingOptions}
+              value={formData.ReceivingNo}
+              onChange={handleReceivingSelect}
+              placeholder="Search receiving number..."
+              required
+            />
           </div>
 
-          {/* Basic Information */}
+          {/* Basic Information Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,51 +245,27 @@ const Form519A = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">Temperature Device Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Device on Alarm</label>
-                <select
-                  value={formData.tempDeviceInfo.onAlarm}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    tempDeviceInfo: { ...prev.tempDeviceInfo, onAlarm: e.target.value }
-                  }))}
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                >
-                  <option value="">Select...</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Device Deactivated</label>
-                <select
-                  value={formData.tempDeviceInfo.deactivated}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    tempDeviceInfo: { ...prev.tempDeviceInfo, deactivated: e.target.value }
-                  }))}
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                >
-                  <option value="">Select...</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Returned to Courier</label>
-                <select
-                  value={formData.tempDeviceInfo.returnedToCourier}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    tempDeviceInfo: { ...prev.tempDeviceInfo, returnedToCourier: e.target.value }
-                  }))}
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                >
-                  <option value="">Select...</option>
-                  <option value="Yes">Yes</option>
-                  <option value="No">No</option>
-                </select>
-              </div>
+              {Object.entries({
+                'Device on Alarm': 'onAlarm',
+                'Device Deactivated': 'deactivated',
+                'Returned to Courier': 'returnedToCourier'
+              }).map(([label, key]) => (
+                <div key={key}>
+                  <label className="block text-sm font-medium text-gray-700">{label}</label>
+                  <select
+                    value={formData.tempDeviceInfo[key]}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      tempDeviceInfo: { ...prev.tempDeviceInfo, [key]: e.target.value }
+                    }))}
+                    className="mt-1 block w-full rounded-md border-gray-300"
+                  >
+                    <option value="">Select...</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -329,34 +296,6 @@ const Form519A = () => {
                 <input
                   type="number"
                   value={formData.exposureTimes.temperTime}
-                  readOnly
-                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Container Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Container Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Container Number</label>
-                <input
-                  type="text"
-                  value={formData.containerInfo.containerNo}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    containerInfo: { ...prev.containerInfo, containerNo: e.target.value }
-                  }))}
-                  className="mt-1 block w-full rounded-md border-gray-300"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Total Units/Container</label>
-                <input
-                  type="number"
-                  value={formData.containerInfo.totalUnitsPerContainer}
                   readOnly
                   className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
                 />
