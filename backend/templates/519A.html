@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Temperature Exposure Record</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 8mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+            background: white;
+            max-width: 180mm;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+            table-layout: fixed;
+        }
+        td, th {
+            border: 1px solid black;
+            padding: 1.5mm;
+            height: 7mm;
+        }
+        .header-table {
+            border: 3px double black;
+            margin-bottom: 3mm;
+        }
+        .title {
+            text-align: center;
+            font-weight: bold;
+            margin: 4mm 0;
+        }
+        .gray-bg {
+            background-color: #e6e6e6;
+        }
+        .field-name {
+            background-color: #e6e6e6;
+        }
+        .item-description {
+            height: 21mm !important;
+            vertical-align: top;
+        }
+        .tall-input-container {
+            height: calc(100% - 2mm);
+            padding: 1mm;
+        }
+        .input-area {
+            min-height: 4mm;
+            padding: 1mm;
+            border-bottom: 1px solid black;
+        }
+        .special-note {
+            font-style: italic;
+            padding: 2mm;
+        }
+        .must-not {
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 4mm;
+        }
+        .notes-section {
+            border: 3px double black;
+        }
+        .notes-section td {
+            padding: 2px;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <table class="header-table">
+        <tr>
+            <td width="50%">AdiraMedica LLC</td>
+            <td width="25%">Form Number:</td>
+            <td width="25%">FORM-519A</td>
+        </tr>
+        <tr>
+            <td>Title: Temperature Exposure Record</td>
+            <td>Revision Number:</td>
+            <td>01</td>
+        </tr>
+    </table>
+
+    <!-- Information Section -->
+    <table>
+        <tr>
+            <td class="field-name" width="25%">Receiving No.:</td>
+            <td width="35%">
+                <div class="input-area">{{ receiving_no }}</div>
+            </td>
+            <td class="field-name" width="15%">Item No.</td>
+            <td width="25%">
+                <div class="input-area">{{ item_no }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name item-description">Item Description:</td>
+            <td colspan="2" class="item-description">
+                <div class="tall-input-container">{{ item_description }}</div>
+            </td>
+            <td>
+                <div>Lot No.: <div class="input-area">{{ lot_no }}</div></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Storage Conditions:</td>
+            <td>
+                <div class="input-area">{{ storage_conditions }}</div>
+            </td>
+            <td class="field-name">Date and Time<br>Received</td>
+            <td>
+                <div class="input-area">{{ date_time_received }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Other Storage Conditions</td>
+            <td colspan="3">
+                <div class="input-area">{{ other_storage_conditions }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Temperature Device on<br>Alarm</td>
+            <td>
+                <div class="input-area">{{ temp_device_alarm }}</div>
+            </td>
+            <td class="field-name">Temperature Device<br>Deactivated</td>
+            <td>
+                <div class="input-area">{{ temp_device_deactivated }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Temperature Device<br>Returned to Courier</td>
+            <td>
+                <div class="input-area">{{ temp_device_returned }}</div>
+            </td>
+            <td class="field-name">Maximum Exposure<br>Time</td>
+            <td>
+                <div class="input-area">{{ max_exposure_time }} (min)</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Temper Time</td>
+            <td>
+                <div class="input-area">{{ temper_time }} (min)</div>
+            </td>
+            <td class="field-name">Working Exposure<br>Time</td>
+            <td>
+                <div class="input-area">{{ working_exposure_time }} (min)</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4" class="special-note">
+                NOTE: Create one Temperature Exposure Record for each container. DO NOT place insulated containers or dry ice inside a temperature-controlled storage unit
+            </td>
+        </tr>
+        <tr>
+            <td>Container No.
+                <div class="input-area">{{ container_no }}</div>
+            </td>
+            <td>Total Units/<br>Container
+                <div class="input-area">{{ total_units_per_container }}</div>
+            </td>
+            <td colspan="2">Record Created By/Date
+                <div class="input-area">{{ record_created_by }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Drug Movement Section -->
+    <div class="title">DRUG MOVEMENT:</div>
+    <table>
+        <tr>
+            <th class="gray-bg" width="20%">Destination/<br>Comments</th>
+            <th width="10%">Date</th>
+            <th width="10%">Time</th>
+            <th class="gray-bg" width="15%">Exposure<br>Time (ET)</th>
+            <th class="gray-bg" width="15%">Cumulative<br>ET</th>
+            <th width="15%">Completed<br>By/Date</th>
+            <th width="15%">Verified<br>By/Date</th>
+        </tr>
+        {% for movement in drug_movements %}
+        <tr class="{{ loop.index0 % 2 == 0 ? 'gray-bg' : '' }}">
+            <td>{{ movement.destination }}</td>
+            <td>{{ movement.date }}</td>
+            <td>{{ movement.time }}</td>
+            <td>{{ movement.exposure_time }} {% if movement.exposure_time %}(min){% endif %}</td>
+            <td>{{ movement.cumulative_et }} {% if movement.cumulative_et %}(min){% endif %}</td>
+            <td>{{ movement.completed_by }}</td>
+            <td>{{ movement.verified_by }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <table class="notes-section">
+        <tr>
+            <td><span class="notes-title">Notes: </span>1. Exposure Time <span class="must-not">MUST NOT EXCEED</span> the Working Exposure Time<br>
+            2. Cumulative Exposure Time <span class="must-not">MUST NOT EXCEED</span> the Maximum Exposure Time</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <p style="margin: 1mm 0;">Effective Date: 03OCT2022</p>
+        <p style="margin: 1mm 0;">Page 1 of 1</p>
+    </div>
+</body>
+</html>

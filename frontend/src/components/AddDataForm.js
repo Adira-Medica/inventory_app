@@ -13,7 +13,6 @@ import {
   YES_NO_OPTIONS
 } from '../constants/formOptions';
 import Button from './common/Button';
-import { mockItemData } from '../mockData';
 import FormInput from './common/FormInput';
 
 const AddDataForm = () => {
@@ -36,7 +35,6 @@ const AddDataForm = () => {
     sequential_numbers: 'No',
     study_type: ''
   });
-
   const [receivingData, setReceivingData] = useState({
     receiving_no: '',
     item_id: '',
@@ -53,13 +51,27 @@ const AddDataForm = () => {
     temp_device_returned_to_courier: 'No',
     comments_for_520b: ''
   });
-
   const [errors, setErrors] = useState({});
   const [availableItems, setAvailableItems] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const fetchOptions = async () => {
+    try {
+      const response = await api.get('/item/numbers');
+
+      const transformedItems = response.data.map(item => ({
+          value: item.item_number,
+          label: `${item.item_number} - ${item.description}`
+        })) ;
+      setAvailableItems(transformedItems);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+      toast.error('Error loading item data');
+    }
+  };
+
   useEffect(() => {
-    setAvailableItems(mockItemData);
+    fetchOptions();
   }, []);
 
   const handleInputChange = useCallback((e) => {
@@ -76,7 +88,6 @@ const AddDataForm = () => {
       }));
     }
   }, [activeTab]);
-
 
   const checkDescription = useCallback(async (description) => {
     try {
@@ -118,6 +129,7 @@ const AddDataForm = () => {
     }
 
     setIsSubmitting(true);
+
     try {
       await api.post('/item/create', itemData);
       toast.success('Item added successfully');
@@ -140,12 +152,14 @@ const AddDataForm = () => {
         study_type: ''
       });
       setErrors({});
+      fetchOptions(); // Refresh available items after adding a new one
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to add item');
     } finally {
       setIsSubmitting(false);
     }
   };
+
   const handleReceivingSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateReceivingData(receivingData);
@@ -156,6 +170,7 @@ const AddDataForm = () => {
     }
 
     setIsSubmitting(true);
+
     try {
       await api.post('/receiving/create', receivingData);
       toast.success('Receiving data added successfully');
@@ -212,7 +227,6 @@ const AddDataForm = () => {
             Add Receiving Data
           </motion.button>
         </div>
-
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -368,7 +382,6 @@ const AddDataForm = () => {
                     required
                   />
                 </div>
-
                 <div className="flex justify-end space-x-4">
                   <Button
                     type="button"
@@ -420,7 +433,7 @@ const AddDataForm = () => {
                     value={receivingData.item_id}
                     onChange={handleInputChange}
                     type="select"
-                    options={availableItems.map(item => item.item_number)}
+                    options={availableItems}
                     error={errors.item_id}
                     required
                   />
@@ -527,7 +540,6 @@ const AddDataForm = () => {
                     error={errors.comments_for_520b}
                   />
                 </div>
-
                 <div className="flex justify-end space-x-4">
                   <Button
                     type="button"

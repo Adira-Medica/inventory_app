@@ -96,7 +96,8 @@ def get_receiving_detail(receiving_no):
             'total_units_vendor': receiving.total_units_vendor,
             'total_storage_containers': receiving.total_storage_containers,
             'exp_date': receiving.exp_date,
-            'ncmr': receiving.ncmr
+            'ncmr': receiving.ncmr,
+            'total_units_received': receiving.total_units_received
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -8,31 +8,46 @@ const Form520B = () => {
   const [formData, setFormData] = useState({
     ItemNo: '',
     ReceivingNo: '',
-    checkboxes: {},
+    TrackingNo: '',
+    ClientName: '',
+    ItemDescription: '',
+    StorageConditionsTemperature: '',
+    Other: '',
+    RN: '',
+    LotNo: '',
+    PONo: '',
+    ProtocolNo: '',
+    Vendor: '',
+    UoM: '',
+    TotalUnits: '',
+    TotalStorageContainers: '',
     selectedDateType: '',
     dateValue: '',
-    comments: '',
     deliveryAcceptance: {
-      "Material placed in storage as documented above": false,
-      "Discrepancies and/or damaged documented on the shipping paperwork": false,
-      "Supporting documentation received attached": false,
-      "Shipment REJECTED. Reason documented on the shipping paperwork": false
+      material_placed: 'na',
+      discrepancies: 'na',
+      supporting_docs: 'na',
+      shipment_rejected: 'na'
     },
+    deliveryCompletedBy: '',
+    receivedBy: '', // Changed from receivingCompletedBy
     documentVerification: {
-      "Purchase Order": false,
-      "Packing Slip": false,
-      "Bill of Lading": false,
-      "CoC/CoA": false,
-      "SDS #": false,
-      "Invoice": false,
-      "Other (Specify)": false
+      'Purchase Order': false,
+      'Packing Slip': false,
+      'Bill of Lading': false,
+      'CoC/CoA': false,
+      'SDS #': false,
+      'Invoice': false,
+      'Other (Specify)': false
     },
     issuesSection: {
-      "Quantity discrepancies found": false,
-      "Damage to shipping container(s)": false,
-      "Damage to product within shipping container": false,
-      "Temperature excursion": false
-    }
+      'Quantity discrepancies found': false,
+      'Damage to shipping container(s)': false,
+      'Damage to product within shipping container': false,
+      'Temperature excursion': false
+    },
+    NCMR: 'N/A',
+    Comments: ''
   });
 
   const [itemOptions, setItemOptions] = useState([]);
@@ -40,7 +55,6 @@ const Form520B = () => {
   const [selectedItemData, setSelectedItemData] = useState(null);
   const [selectedReceivingData, setSelectedReceivingData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchOptions();
@@ -53,12 +67,12 @@ const Form520B = () => {
         api.get('/item/numbers'),
         api.get('/receiving/numbers')
       ]);
-
+      
       const itemOpts = itemResponse.data.map(item => ({
         value: item.item_number,
         label: `${item.item_number} - ${item.description}`
       }));
-
+      
       const receivingOpts = receivingResponse.data.map(rec => ({
         value: rec.receiving_no,
         label: rec.receiving_no
@@ -78,9 +92,17 @@ const Form520B = () => {
     try {
       const response = await api.get(`/item/get/${selectedValue}`);
       setSelectedItemData(response.data);
+      
       setFormData(prev => ({
         ...prev,
-        ItemNo: selectedValue
+        ItemNo: selectedValue,
+        ItemDescription: response.data.description,
+        ClientName: response.data.client,
+        Vendor: response.data.vendor,
+        StorageConditionsTemperature: response.data.temp_storage_conditions,
+        Other: response.data.other_storage_conditions,
+        UoM: response.data.uom,
+        ProtocolNo: response.data.protocol_number
       }));
     } catch (error) {
       console.error("Error fetching item details:", error);
@@ -92,9 +114,16 @@ const Form520B = () => {
     try {
       const response = await api.get(`/receiving/get/${selectedValue}`);
       setSelectedReceivingData(response.data);
+      
       setFormData(prev => ({
         ...prev,
-        ReceivingNo: selectedValue
+        ReceivingNo: selectedValue,
+        RN: selectedValue,
+        LotNo: response.data.lot_no,
+        PONo: response.data.po_no,
+        TrackingNo: response.data.tracking_number,
+        TotalUnits: response.data.total_units_vendor,
+        TotalStorageContainers: response.data.total_storage_containers
       }));
     } catch (error) {
       console.error("Error fetching receiving details:", error);
@@ -102,12 +131,12 @@ const Form520B = () => {
     }
   };
 
-  const handleCheckboxChange = (section, name) => {
+  const handleDeliveryOptionChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [name]: !prev[section][name]
+      deliveryAcceptance: {
+        ...prev.deliveryAcceptance,
+        [field]: value
       }
     }));
   };
@@ -120,46 +149,59 @@ const Form520B = () => {
     }));
   };
 
+  const handleDocumentVerificationChange = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      documentVerification: {
+        ...prev.documentVerification,
+        [field]: !prev.documentVerification[field]
+      }
+    }));
+  };
+
+  const handleIssuesSectionChange = (field) => {
+    setFormData(prev => ({
+      ...prev,
+      issuesSection: {
+        ...prev.issuesSection,
+        [field]: !prev.issuesSection[field]
+      }
+    }));
+  };
+
   const handleGeneratePDF = async (e) => {
     e.preventDefault();
-
     if (!selectedItemData || !selectedReceivingData) {
       toast.error('Please select both Item Number and Receiving Number');
       return;
     }
 
     try {
-      setIsSubmitting(true);
       const pdfData = {
         'Item No': formData.ItemNo,
-        'Tracking No': selectedReceivingData.tracking_number,
-        'Client Name': selectedItemData.client,
-        'Item Description': selectedItemData.description,
-        'Storage Conditions:Temperature': selectedItemData.temp_storage_conditions,
-        'Other': selectedItemData.other_storage_conditions,
-        'RN': formData.ReceivingNo,
-        'Lot No': selectedReceivingData.lot_no,
-        'PO No': selectedReceivingData.po_no,
-        'Protocol No': selectedItemData.protocol_number,
-        'Vendor': selectedItemData.vendor,
-        'UoM': selectedItemData.uom,
-        'Total Units (vendor count)': selectedReceivingData.total_units_vendor,
-        'Total Storage Containers': selectedReceivingData.total_storage_containers,
-        ...Object.entries(formData.deliveryAcceptance).reduce((acc, [key, value]) => ({
-          ...acc,
-          [key]: value
-        }), {}),
-        ...Object.entries(formData.documentVerification).reduce((acc, [key, value]) => ({
-          ...acc,
-          [key]: value
-        }), {}),
-        ...Object.entries(formData.issuesSection).reduce((acc, [key, value]) => ({
-          ...acc,
-          [key]: value
-        }), {}),
-        [formData.selectedDateType]: formData.dateValue,
-        'NCMR': selectedReceivingData.ncmr || 'N/A',
-        'Comments': formData.comments || ''
+        'Tracking No': formData.TrackingNo,
+        'Client Name': formData.ClientName,
+        'Item Description': formData.ItemDescription,
+        'Storage Conditions:Temperature': formData.StorageConditionsTemperature,
+        'Other': formData.Other,
+        'RN': formData.RN,
+        'Lot No': formData.LotNo,
+        'PO No': formData.PONo,
+        'Protocol No': formData.ProtocolNo,
+        'Vendor': formData.Vendor,
+        'UoM': formData.UoM,
+        'Total Units (vendor count)': formData.TotalUnits,
+        'Total Storage Containers': formData.TotalStorageContainers,
+        'deliveryAcceptance': formData.deliveryAcceptance,
+        'deliveryCompletedBy': formData.deliveryCompletedBy,
+        'receivedBy': formData.receivedBy,
+        'selectedDateType': formData.selectedDateType,
+        'dateValue': formData.dateValue,
+        'receivingCompletedBy': formData.receivedBy,
+        'documentVerification': formData.documentVerification,
+        'issuesSection': formData.issuesSection,
+        'NCMR': formData.NCMR,
+        'Comments': formData.Comments
       };
 
       const response = await api.post('/form/generate-pdf/520B', pdfData, {
@@ -170,7 +212,7 @@ const Form520B = () => {
       const fileURL = URL.createObjectURL(file);
       const link = document.createElement('a');
       link.href = fileURL;
-      link.download = `520B_${formData.ReceivingNo}.pdf`;
+      link.download = `520B_${formData.RN}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -180,8 +222,6 @@ const Form520B = () => {
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -195,7 +235,7 @@ const Form520B = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <form onSubmit={handleGeneratePDF} className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+      <form onSubmit={handleGeneratePDF} className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-center mb-6">Generate Form 520B</h2>
         
         <div className="space-y-6">
@@ -209,7 +249,6 @@ const Form520B = () => {
               placeholder="Search item number..."
               required
             />
-
             <SearchableSelect
               label="Receiving Number"
               options={receivingOptions}
@@ -220,71 +259,277 @@ const Form520B = () => {
             />
           </div>
 
-          {/* Document Verification Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              Verified the following Receiving Documents:
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.keys(formData.documentVerification).map(item => (
-                <div key={item} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.documentVerification[item]}
-                    onChange={() => handleCheckboxChange('documentVerification', item)}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 text-sm text-gray-700">{item}</label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Issues Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              Check all that apply and explain in the comments section:
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.keys(formData.issuesSection).map(item => (
-                <div key={item} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.issuesSection[item]}
-                    onChange={() => handleCheckboxChange('issuesSection', item)}
-                    className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 text-sm text-gray-700">{item}</label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Date Section */}
-          <div className="space-y-4">
-            <div className="flex space-x-6">
-              {['Expiration Date', 'Retest Date', 'Use-by-Date'].map(dateType => (
-                <label key={dateType} className="flex items-center">
-                  <input
-                    type="radio"
-                    checked={formData.selectedDateType === dateType}
-                    onChange={() => handleDateTypeChange(dateType)}
-                    className="h-4 w-4 text-indigo-600 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{dateType}</span>
-                </label>
-              ))}
-            </div>
-
-            {formData.selectedDateType && (
+          {/* Basic Information */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Tracking Number</label>
               <input
                 type="text"
-                placeholder="MM/DD/YYYY"
-                value={formData.dateValue}
-                onChange={(e) => setFormData(prev => ({ ...prev, dateValue: e.target.value }))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                value={formData.TrackingNo}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
               />
-            )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Client Name</label>
+              <input
+                type="text"
+                value={formData.ClientName}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700">Item Description</label>
+              <textarea
+                value={formData.ItemDescription}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                rows={2}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Storage Conditions: Temperature</label>
+              <input
+                type="text"
+                value={formData.StorageConditionsTemperature}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Other</label>
+              <input
+                type="text"
+                value={formData.Other}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+              />
+            </div>
+          </div>
+
+          {/* Delivery Acceptance Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Delivery Acceptance</h3>
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { label: 'Material placed in storage as documented above', field: 'material_placed' },
+                { label: 'Discrepancies and/or damaged documented on the shipping paperwork', field: 'discrepancies' },
+                { label: 'Supporting documentation received attached', field: 'supporting_docs' },
+                { label: 'Shipment REJECTED. Reason documented on the shipping paperwork', field: 'shipment_rejected' }
+              ].map(({ label, field }) => (
+                <div key={field} className="flex items-center justify-between bg-gray-50 p-4 rounded">
+                  <span className="text-sm text-gray-700">{label}</span>
+                  <div className="flex items-center space-x-6">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name={field}
+                        value="na"
+                        checked={formData.deliveryAcceptance[field] === 'na'}
+                        onChange={() => handleDeliveryOptionChange(field, 'na')}
+                        className="form-radio h-4 w-4 text-indigo-600"
+                      />
+                      <span className="ml-2">N/A</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name={field}
+                        value="no"
+                        checked={formData.deliveryAcceptance[field] === 'no'}
+                        onChange={() => handleDeliveryOptionChange(field, 'no')}
+                        className="form-radio h-4 w-4 text-indigo-600"
+                      />
+                      <span className="ml-2">No</span>
+                    </label>
+                    <label className="inline-flex items-center">
+                      <input
+                        type="radio"
+                        name={field}
+                        value="yes"
+                        checked={formData.deliveryAcceptance[field] === 'yes'}
+                        onChange={() => handleDeliveryOptionChange(field, 'yes')}
+                        className="form-radio h-4 w-4 text-indigo-600"
+                      />
+                      <span className="ml-2">Yes</span>
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">
+                Completed By (Name and Initials)/Date:
+              </label>
+              <input
+                type="text"
+                value={formData.deliveryCompletedBy}
+                onChange={(e) => setFormData(prev => ({ ...prev, deliveryCompletedBy: e.target.value }))}
+                className="mt-1 block w-full rounded-md border-gray-300"
+              />
+            </div>
+          </div>
+
+          {/* Receiving Report Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Receiving Report</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">RN</label>
+                <input
+                  type="text"
+                  value={formData.RN}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Lot No.</label>
+                <input
+                  type="text"
+                  value={formData.LotNo}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">PO No.</label>
+                <input
+                  type="text"
+                  value={formData.PONo}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Protocol No.</label>
+                <input
+                  type="text"
+                  value={formData.ProtocolNo}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">UOM</label>
+                <input
+                  type="text"
+                  value={formData.UoM}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Total Units</label>
+                <input
+                  type="text"
+                  value={formData.TotalUnits}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Total Storage Containers</label>
+                <input
+                  type="text"
+                  value={formData.TotalStorageContainers}
+                  readOnly
+                  className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Date Selection Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-8">
+              <div className="flex space-x-6">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="dateType"
+                    checked={formData.selectedDateType === 'Expiry Date'}
+                    onChange={() => handleDateTypeChange('Expiry Date')}
+                    className="form-radio h-4 w-4 text-indigo-600"
+                  />
+                  <span className="ml-2">Expiry Date</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="dateType"
+                    checked={formData.selectedDateType === 'Retest Date'}
+                    onChange={() => handleDateTypeChange('Retest Date')}
+                    className="form-radio h-4 w-4 text-indigo-600"
+                  />
+                  <span className="ml-2">Retest Date</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="dateType"
+                    checked={formData.selectedDateType === 'Use-by-Date'}
+                    onChange={() => handleDateTypeChange('Use-by-Date')}
+                    className="form-radio h-4 w-4 text-indigo-600"
+                  />
+                  <span className="ml-2">Use-by-Date</span>
+                </label>
+              </div>
+              {formData.selectedDateType && (
+                <input
+                  type="date"
+                  value={formData.dateValue}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dateValue: e.target.value }))}
+                  className="rounded-md border-gray-300"
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Document Verification and Issues Sections */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Document Verification</h3>
+              <div className="space-y-2">
+                {Object.keys(formData.documentVerification).map(doc => (
+                  <div key={doc} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.documentVerification[doc]}
+                      onChange={() => handleDocumentVerificationChange(doc)}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">{doc}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Issues</h3>
+              <div className="space-y-2">
+                {Object.keys(formData.issuesSection).map(issue => (
+                  <div key={issue} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={formData.issuesSection[issue]}
+                      onChange={() => handleIssuesSectionChange(issue)}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 text-sm text-gray-700">{issue}</label>
+                  </div>
+                ))}
+                <div className="mt-2">
+                  <label className="block text-sm font-medium text-gray-700">NCMR:</label>
+                  <input
+                    type="text"
+                    value={formData.NCMR}
+                    onChange={(e) => setFormData(prev => ({ ...prev, NCMR: e.target.value }))}
+                    className="mt-1 block w-full rounded-md border-gray-300"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Comments Section */}
@@ -293,32 +538,37 @@ const Form520B = () => {
               Comments
             </label>
             <textarea
-              value={formData.comments}
-              onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              value={formData.Comments}
+              onChange={(e) => setFormData(prev => ({ ...prev, Comments: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300"
               rows={3}
             />
           </div>
 
-          {/* Submit Button */}
+          {/* Received By Section */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Received By (Name and Initials)/Date:
+            </label>
+            <input
+              type="text"
+              value={formData.receivedBy}
+              onChange={(e) => setFormData(prev => ({ ...prev, receivedBy: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300"
+            />
+          </div>
+
           <div className="flex justify-end mt-6">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className={`
-                bg-indigo-600 text-white px-4 py-2 rounded-md
-                hover:bg-indigo-700 focus:outline-none focus:ring-2
-                focus:ring-indigo-500
-                ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
-              `}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
-              {isSubmitting ? 'Generating PDF...' : 'Generate PDF'}
+              Generate PDF
             </button>
           </div>
         </div>
       </form>
     </div>
-  );
-};
+  );}
 
-export default Form520B;
+  export default Form520B;

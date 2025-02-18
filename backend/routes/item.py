@@ -30,7 +30,7 @@ def check_description():
 # backend/routes/item.py
 @bp.route('/create', methods=['POST'])
 @jwt_required()
-@role_required(['admin', 'manager'])  # Only admin and manager can create items
+# @role_required(['admin', 'manager'])  # Only admin and manager can create items
 def create_item():
     try:
         current_user = get_jwt_identity()

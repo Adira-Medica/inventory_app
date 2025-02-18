@@ -4,7 +4,12 @@ export const CONTROLLED_OPTIONS = [
     'Yes - CII Narc',
     'Yes - CII Non',
     'Yes - CIII Narc',
-    'Yes - CIII Non'
+    'Yes - CIII Non',
+    'Yes - CIV Narc',
+    'Yes - CIV Non',
+    'Yes - CV Narc',
+    'Yes - CV Non',
+    'Yes - Chemical List 1'
   ];
   
   export const STUDY_TYPE_OPTIONS = [
@@ -16,21 +21,34 @@ export const CONTROLLED_OPTIONS = [
   ];
   
   export const UOM_OPTIONS = [
-    'kg',
-    'L',
-    'mg',
-    'mL',
-    'units',
-    'tablets',
-    'capsules'
+    '1 x Bag',
+    '1 X Carton',
+    '1 X Kit',
+    '10x Kit',
+    'Assembled Nest',
+    'Bag',
+    'Blister',
+    'Bottle',
+    'Card',
+    'Carton',
+    'Divider',
+    'Drug',
+    'Grams',
+    'Kit',
+    'Label',
+    'Pack',
+    'Roll',
+    'Seal',
+    'Temp Monitor',
+    'Vial',
+    'Wafer Seal'
   ];
   
   export const TEMP_CONDITIONS_OPTIONS = [
-    'Room Temp',
-    'Cool',
+    'CRT (20-25°C)',
     'Refrigerated (2-8°C)',
     'Frozen (-20°C)',
-    'Ultra Low (-80°C)'
+    'Frozen (-70°C)'
   ];
   
   export const NCMR_OPTIONS = [

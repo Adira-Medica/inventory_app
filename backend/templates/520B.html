@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CTM Material Receiving Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 8mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+            background: white;
+            max-width: 180mm;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2mm;
+            table-layout: fixed;
+        }
+        td {
+            border: 1px solid black;
+            padding: 1.5mm;
+        }
+        .header-table {
+            border: 3px double black;
+            margin-bottom: 3mm;
+        }
+        .header-table td {
+            padding: 1.5mm;
+        }
+        .section-title {
+            font-weight: bold;
+            margin: 2mm 0;
+            font-size: 11pt;
+        }
+        .field-container {
+            display: flex;
+            align-items: center;
+            min-height: 5mm;
+        }
+        .field-name {
+            background-color: #e6e6e6;
+            padding: 1mm;
+            white-space: nowrap;
+            min-width: 20mm;
+        }
+        .input-area {
+            flex: 1;
+            padding: 0 1mm;
+            min-height: 4mm;
+            border-bottom: 1px solid black;
+        }
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            padding: 0.5mm 1mm;
+            margin-bottom: 2mm;
+        }
+        .checkbox-label {
+            flex: 1;
+            margin-right: 2mm;
+            display: flex;
+            align-items: center;
+        }
+        .checkbox-group {
+            display: flex;
+            gap: 10mm;
+            align-items: center;
+            margin-left: auto;
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 1mm;
+            white-space: nowrap;
+        }
+        .dates-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1mm;
+            min-height: 5mm;
+        }
+        .date-options {
+            display: flex;
+            gap: 10mm;
+        }
+        .documents-header {
+            background-color: #e6e6e6;
+            font-weight: bold;
+            padding: 1mm;
+        }
+        .checkbox-list {
+            display: grid;
+            gap: 1mm;
+            margin-top: 1mm;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 1mm;
+            min-height: 4mm;
+        }
+        .comments-section {
+            min-height: 35mm;
+            padding: 1mm;
+        }
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border: 1px solid black;
+            position: relative;
+            margin: 0;
+            cursor: pointer;
+        }
+        input[type="checkbox"][checked] {
+            background-color: white;
+        }
+        input[type="checkbox"][checked]::after {
+            content: "✓";
+            position: absolute;
+            color: black;
+            font-size: 12px;
+            left: 1px;
+            top: -3px;
+        }
+        input[type="checkbox"]:disabled {
+            opacity: 1;
+        }
+        .completed-by {
+            margin-top: 2mm;
+            padding: 1mm;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 8mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="width: 50%;">AdiraMedica LLC</td>
+            <td style="width: 50%;">Form Number: FORM-520B</td>
+        </tr>
+        <tr>
+            <td>Title: CTM Material Receiving Report</td>
+            <td>Revision: 01</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Delivery Acceptance (Complete At Material Delivery)</div>
+    <table>
+        <tr>
+            <td style="width: 25%">
+                <div class="field-container">
+                    <div class="field-name">Item No.</div>
+                    <div class="input-area">{{ item_no }}</div>
+                </div>
+            </td>
+            <td style="width: 35%">
+                <div class="field-container">
+                    <div class="field-name">Tracking No.</div>
+                    <div class="input-area">{{ tracking_no }}</div>
+                </div>
+            </td>
+            <td style="width: 40%">
+                <div class="field-container">
+                    <div class="field-name">Client Name</div>
+                    <div class="input-area">{{ client_name }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div class="field-container">
+                    <div class="field-name">Item Description</div>
+                    <div class="input-area">{{ item_description }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="field-container">
+                    <div class="field-name">Storage Conditions:Temperature</div>
+                    <div class="input-area">{{ storage_conditions_temp }}</div>
+                </div>
+            </td>
+            <td>
+                <div class="field-container">
+                    <div class="field-name">Other</div>
+                    <div class="input-area">{{ storage_conditions_other }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div class="checkbox-row">
+                    <div class="checkbox-label">Material placed in storage as documented above</div>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.material_placed else '' }} disabled>
+                            <span>N/A</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.material_placed_yes else '' }} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.material_placed_no else '' }} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="checkbox-row">
+                    <span class="checkbox-label">Discrepancies and/or damaged documented on the shipping paperwork</span>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.discrepancies else '' }} disabled>
+                            <span>N/A</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.discrepancies_yes else '' }} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.discrepancies_no else '' }} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="checkbox-row">
+                    <span class="checkbox-label">Supporting documentation received attached</span>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.supporting_docs else '' }} disabled>
+                            <span>N/A</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.supporting_docs_yes else '' }} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.supporting_docs_no else '' }} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="checkbox-row">
+                    <span class="checkbox-label">Shipment REJECTED. Reason documented on the shipping paperwork</span>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.shipment_rejected else '' }} disabled>
+                            <span>N/A</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.shipment_rejected_yes else '' }} disabled>
+                            <span>Yes</span>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.shipment_rejected_no else '' }} disabled>
+                            <span>No</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="completed-by">Completed By (Name and Initials)/Date: {{ deliveryCompletedBy }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="section-title">Receiving Report</div>
+    <table>
+        <tr>
+            <td style="width: 33.33%">
+                <div class="field-container">
+                    <div class="field-name">RN</div>
+                    <div class="input-area">{{ receiving_no }}</div>
+                </div>
+            </td>
+            <td style="width: 33.33%">
+                <div class="field-container">
+                    <div class="field-name">Lot No.</div>
+                    <div class="input-area">{{ lot_no }}</div>
+                </div>
+            </td>
+            <td style="width: 33.33%">
+                <div class="field-container">
+                    <div class="field-name">PO No.</div>
+                    <div class="input-area">{{ po_no }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="field-container">
+                    <div class="field-name">Vendor</div>
+                    <div class="input-area">{{ vendor }}</div>
+                </div>
+            </td>
+            <td>
+                <div class="field-container">
+                    <div class="field-name">Protocol No.</div>
+                    <div class="input-area">{{ protocol_no }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="field-container">
+                    <div class="field-name">UoM</div>
+                    <div class="input-area">{{ uom }}</div>
+                </div>
+            </td>
+            <td>
+                <div class="field-container">
+                    <div class="field-name">Total Units (vendor count):</div>
+                    <div class="input-area">{{ total_units }}</div>
+                </div>
+            </td>
+            <td>
+                <div class="field-container">
+                    <div class="field-name">Total Storage Containers</div>
+                    <div class="input-area">{{ total_containers }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <div class="dates-row">
+                    <div class="date-options">
+                        <div style="white-space: nowrap;">
+                            <input type="checkbox" {{ 'checked' if dateType == 'Expiration Date' else '' }} disabled>
+                            <label>Expiry Date</label>
+                        </div>
+                        <div style="white-space: nowrap;">
+                            <input type="checkbox" {{ 'checked' if dateType == 'Retest Date' else '' }} disabled>
+                            <label>Retest Date</label>
+                        </div>
+                        <div style="white-space: nowrap;">
+                            <input type="checkbox" {{ 'checked' if dateType == 'Use-by-Date' else '' }} disabled>
+                            <label>Use-by-Date</label>
+                        </div>
+                    </div>
+                    <div class="input-area" style="max-width: 150px;">{{ dateValue }}</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <td class="documents-header" width="50%">
+                Verified the following Receiving Documents:<br>
+                (Check all that apply)
+                <div class="checkbox-list">
+                    {% for doc in documentVerification %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" {{ doc.checked }} disabled>
+                        <label>{{ doc.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </td>
+            <td class="documents-header">
+                Check all that apply and explain in the comments section
+                <div class="checkbox-list">
+                    {% for issue in issuesSection %}
+                    <div class="checkbox-item">
+                        <input type="checkbox" {{ issue.checked }} disabled>
+                        <label>{{ issue.name }}</label>
+                    </div>
+                    {% endfor %}
+                    <div class="checkbox-item">
+                        <span>NCMR:</span>
+                        <div class="input-area" style="width: 100px; margin: 0 1mm;">{{ ncmr }}</div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div>Comments</div>
+                <div class="comments-section">{{ comments }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                Received By (Name and Initials)/Date: {{ receivingCompletedBy }}
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 2mm;">
+        <p style="margin: 1mm 0;">Effective Date: 03OCT2022</p>
+        <p style="margin: 1mm 0;">Page 1 of 1</p>
+    </div>
+</body>
+</html>

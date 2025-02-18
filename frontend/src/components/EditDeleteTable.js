@@ -1,5 +1,5 @@
 // src/components/EditDeleteTable.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 import EditModal from './modals/EditModal';
@@ -15,7 +15,7 @@ const EditDeleteTable = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingData, setEditingData] = useState({});
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       if (activeTab === 'items') {
@@ -43,12 +43,12 @@ const EditDeleteTable = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
     setCurrentPage(1);
-  }, [activeTab]);
+  }, [fetchData, activeTab]);
 
   const handleObsolete = async (id) => {
     try {
@@ -272,6 +272,7 @@ const EditDeleteTable = () => {
         <thead className="bg-gray-50">
           <tr>
             {[
+              'Item No',
               'Receiving No',
               'Tracking Number',
               'Lot No',
@@ -297,6 +298,7 @@ const EditDeleteTable = () => {
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((receiving) => (
             <tr key={receiving.id} className={receiving.is_obsolete ? 'bg-red-100' : ''}>
+              <td className="px-6 py-4 whitespace-nowrap">{receiving.item_number}</td>
               <td className="px-6 py-4 whitespace-nowrap">{receiving.receiving_no}</td>
               <td className="px-6 py-4 whitespace-nowrap">{receiving.tracking_number}</td>
               <td className="px-6 py-4 whitespace-nowrap">{receiving.lot_no}</td>

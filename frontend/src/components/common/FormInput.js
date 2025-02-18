@@ -1,4 +1,3 @@
-// src/components/common/FormInput.js
 import React from 'react';
 
 const FormInput = React.memo(({ 
@@ -25,9 +24,19 @@ const FormInput = React.memo(({
                    ${error ? 'border-red-300' : ''}`}
       >
         <option value="">Select {label}</option>
-        {options.map(option => (
-          <option key={option} value={option}>{option}</option>
-        ))}
+        {options.map(option => {
+          // Handle both object {value, label} and string options
+          const optionValue = option.value ?? option;
+          const optionLabel = option.label ?? option;
+          return (
+            <option 
+              key={optionValue} 
+              value={optionValue}
+            >
+              {optionLabel}
+            </option>
+          );
+        })}
       </select>
     ) : type === 'textarea' ? (
       <textarea

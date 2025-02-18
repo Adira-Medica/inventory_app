@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CTM Inventory Record</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 8mm;
+            margin: 0 auto;
+            box-sizing: border-box;
+            background: white;
+            max-width: 180mm;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2mm;
+            table-layout: fixed;
+        }
+        td {
+            border: 1px solid black;
+            padding: 1.5mm;
+        }
+        .header-table {
+            border: 3px double black;
+            margin-bottom: 3mm;
+        }
+        .field-name {
+            background-color: #e6e6e6;
+        }
+        .item-description {
+            height: 21mm !important;
+            vertical-align: top;
+        }
+        .other-storage {
+            height: 14mm !important;
+            vertical-align: top;
+        }
+        .quarantine-cell {
+            text-align: center;
+            vertical-align: middle;
+            background-color: white;
+        }
+        .quarantine-text {
+            font-size: 30pt;
+            color: yellow;
+            -webkit-text-stroke: 1px black;
+            text-stroke: 1px black;
+            font-weight: bold;
+            line-height: 1;
+            margin: 0;
+            padding: 0;
+        }
+        .input-area {
+            min-height: 5mm;
+            padding: 1mm;
+        }
+        .tall-input-container {
+            height: calc(100% - 2mm);
+            padding: 1mm;
+        }
+        .status-row {
+            display: inline;
+            white-space: nowrap;
+            padding: 0 2mm;
+        }
+        .status-row > div {
+            display: inline-block;
+            margin-right: 25mm;
+        }
+        .date-row {
+            display: inline;
+            white-space: nowrap;
+        }
+        .date-row > div {
+            display: inline-block;
+            margin-right: 25mm;
+        }
+        .transaction-table {
+            margin-top: 4mm;
+        }
+        .transaction-table th {
+            background-color: #e6e6e6;
+            font-weight: normal;
+            text-align: center;
+            padding: 1.5mm;
+            height: 7mm;
+            border: 1px solid black;
+        }
+        .transaction-table td {
+            height: 8mm;
+            padding: 1mm;
+            border: 1px solid black;
+        }
+        .comments-section td {
+            padding: 1.5mm;
+        }
+        .comments-area {
+            height: 20mm;
+            padding: 1mm;
+        }
+        .footer {
+            margin-top: 2mm;
+        }
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border: 1px solid black;
+            position: relative;
+            margin: 0;
+            cursor: pointer;
+        }
+        input[type="checkbox"][checked] {
+            background-color: white;
+        }
+        input[type="checkbox"][checked]::after {
+            content: "✓";
+            position: absolute;
+            color: black;
+            font-size: 12px;
+            left: 1px;
+            top: -3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <table class="header-table">
+        <tr>
+            <td width="50%">AdiraMedica LLC</td>
+            <td width="25%">Form Number:</td>
+            <td width="25%">FORM-501A</td>
+        </tr>
+        <tr>
+            <td>Title: CTM Inventory Record</td>
+            <td>Revision Number:</td>
+            <td>01</td>
+        </tr>
+    </table>
+
+    <!-- Content Section -->
+    <table class="main-table">
+        <tr>
+            <td class="field-name" width="15%">Receiving No.</td>
+            <td width="35%">
+                <div class="input-area">{{ receiving_no }}</div>
+            </td>
+            <td class="field-name" width="15%">Item No.</td>
+            <td width="35%">
+                <div class="input-area">{{ item_no }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name item-description">Item Description</td>
+            <td class="item-description">
+                <div class="tall-input-container">{{ item_description }}</div>
+            </td>
+            <td colspan="2" rowspan="8" class="quarantine-cell">
+                <div class="quarantine-text">QUARANTINE</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Client Name</td>
+            <td>
+                <div class="input-area">{{ client_name }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Vendor Name</td>
+            <td>
+                <div class="input-area">{{ vendor_name }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Lot No.</td>
+            <td>
+                <div class="input-area">{{ lot_no }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Storage Conditions</td>
+            <td>
+                <div class="input-area">{{ storage_conditions }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name other-storage">Other Storage Conditions</td>
+            <td class="other-storage">
+                <div class="tall-input-container">{{ other_storage_conditions }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Total Units Received/UOM</td>
+            <td>
+                <div class="input-area">{{ total_units_received }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Controlled Substance</td>
+            <td>
+                <div class="input-area">{{ controlled_substance }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td class="field-name">Location by Status</td>
+            <td colspan="3">
+                <div class="status-row">
+                    <div>
+                        <input type="checkbox" {{ 'checked' if locationStatus.quarantine else '' }} disabled>
+                        <label>Quarantine:</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" {{ 'checked' if locationStatus.rejected else '' }} disabled>
+                        <label>Rejected:</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" {{ 'checked' if locationStatus.released else '' }} disabled>
+                        <label>Released:</label>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <div class="date-row">
+                    <div>
+                        <input type="checkbox" {{ 'checked' if dateType == 'Expiration Date' else '' }} disabled>
+                        <label>Expiration Date</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" {{ 'checked' if dateType == 'Retest Date' else '' }} disabled>
+                        <label>Retest Date</label>
+                    </div>
+                    <div style="margin-right: 10mm;">
+                        <input type="checkbox" {{ 'checked' if dateType == 'Use-by-Date' else '' }} disabled>
+                        <label>Use-by-Date</label>
+                    </div>
+                    <div class="input-area" style="width: 150px; display: inline-block;">{{ dateValue }}</div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                Completed By (Name and Initials)/Date: {{ completedBy }}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Transaction Table -->
+    <table class="transaction-table">
+        <tr>
+            <th style="width: 15%;">Date</th>
+            <th style="width: 20%;">Reason</th>
+            <th style="width: 15%;">Transaction<br>(In/Out/Adjust)</th>
+            <th style="width: 10%;">Quantity</th>
+            <th style="width: 10%;">Balance</th>
+            <th style="width: 15%;">Balance<br>Location</th>
+            <th style="width: 15%;">Entered By/Initials</th>
+        </tr>
+        {% for transaction in transactions %}
+        <tr>
+            <td>{{ transaction.date }}</td>
+            <td>{{ transaction.reason }}</td>
+            <td>{{ transaction.transactionType }}</td>
+            <td>{{ transaction.quantity }}</td>
+            <td>{{ transaction.balance }}</td>
+            <td>{{ transaction.balanceLocation }}</td>
+            <td>{{ transaction.enteredBy }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- Comments Section -->
+    <table class="comments-section">
+        <tr>
+            <td>Comments:</td>
+        </tr>
+        <tr>
+            <td class="comments-area">{{ comments }}</td>
+        </tr>
+    </table>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p style="margin: 1mm 0;">Effective Date: 03OCT2022</p>
+        <p style="margin: 1mm 0;">Page 1 of 1</p>
+    </div>
+</body>
+</html>

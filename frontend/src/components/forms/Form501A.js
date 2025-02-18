@@ -23,6 +23,16 @@ const Form501A = () => {
     },
     dateType: '',
     dateValue: '',
+    completedBy: '',
+    transactions: Array(6).fill().map(() => ({
+      date: '',
+      reason: '',
+      transactionType: '',
+      quantity: '',
+      balance: '',
+      balanceLocation: '',
+      enteredBy: ''
+    })),
     comments: ''
   });
 
@@ -87,12 +97,14 @@ const Form501A = () => {
   const handleReceivingSelect = async (selectedValue) => {
     try {
       const response = await api.get(`/receiving/get/${selectedValue}`);
+      console.log('Receiving data:', response.data);
       setSelectedReceivingData(response.data);
+      
       setFormData(prev => ({
         ...prev,
         ReceivingNo: selectedValue,
         lotNo: response.data.lot_no,
-        totalUnitsReceived: response.data.total_units_received
+        totalUnitsReceived: `${response.data.total_units_received || ''} ${selectedItemData?.uom || ''}`
       }));
     } catch (error) {
       console.error("Error fetching receiving details:", error);
@@ -110,6 +122,23 @@ const Form501A = () => {
     }));
   };
 
+  const handleDateTypeChange = (dateType) => {
+    setFormData(prev => ({
+      ...prev,
+      dateType: prev.dateType === dateType ? '' : dateType,
+      dateValue: prev.dateType === dateType ? '' : prev.dateValue
+    }));
+  };
+
+  const handleTransactionChange = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      transactions: prev.transactions.map((transaction, i) => 
+        i === index ? { ...transaction, [field]: value } : transaction
+      )
+    }));
+  };
+
   const handleGeneratePDF = async (e) => {
     e.preventDefault();
 
@@ -119,7 +148,39 @@ const Form501A = () => {
     }
 
     try {
-      const response = await api.post('/form/generate-pdf/501A', formData, {
+      const pdfData = {
+        'receiving_no': formData.ReceivingNo,
+        'item_no': formData.ItemNo,
+        'item_description': selectedItemData.description,
+        'client_name': selectedItemData.client,
+        'vendor_name': selectedItemData.vendor,
+        'lot_no': selectedReceivingData.lot_no,
+        'storage_conditions': selectedItemData.temp_storage_conditions,
+        'other_storage_conditions': selectedItemData.other_storage_conditions,
+        'total_units_received': formData.totalUnitsReceived,
+        'controlled_substance': selectedItemData.controlled,
+        'locationStatus': {
+          quarantine: formData.locationStatus.quarantine,
+          rejected: formData.locationStatus.rejected,
+          released: formData.locationStatus.released
+        },
+        'dateType': formData.dateType,
+        'dateValue': formData.dateValue,
+        'completedBy': formData.completedBy,
+        'transactions': formData.transactions.map(t => ({
+          ...t,
+          date: t.date || '',
+          reason: t.reason || '',
+          transactionType: t.transactionType || '',
+          quantity: t.quantity || '',
+          balance: t.balance || '',
+          balanceLocation: t.balanceLocation || '',
+          enteredBy: t.enteredBy || ''
+        })),
+        'comments': formData.comments
+      };
+
+      const response = await api.post('/form/generate-pdf/501A', pdfData, {
         responseType: 'blob'
       });
 
@@ -150,7 +211,7 @@ const Form501A = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <form onSubmit={handleGeneratePDF} className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+      <form onSubmit={handleGeneratePDF} className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-center mb-6">Generate Form 501A</h2>
         
         <div className="space-y-6">
@@ -163,7 +224,6 @@ const Form501A = () => {
               placeholder="Search item number..."
               required
             />
-
             <SearchableSelect
               label="Receiving Number"
               options={receivingOptions}
@@ -177,11 +237,11 @@ const Form501A = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Item Description</label>
-              <input
-                type="text"
+              <textarea
                 value={formData.itemDescription}
                 readOnly
                 className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                rows={3}
               />
             </div>
             <div>
@@ -194,10 +254,10 @@ const Form501A = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Controlled Substance</label>
+              <label className="block text-sm font-medium text-gray-700">Vendor Name</label>
               <input
                 type="text"
-                value={formData.controlledSubstance}
+                value={formData.vendorName}
                 readOnly
                 className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
               />
@@ -222,15 +282,34 @@ const Form501A = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Other Storage Conditions</label>
+              <textarea
+                value={formData.otherStorageConditions}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+                rows={2}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Controlled Substance</label>
               <input
                 type="text"
-                value={formData.otherStorageConditions}
+                value={formData.controlledSubstance}
+                readOnly
+                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Total Units Received/UOM</label>
+              <input
+                type="text"
+                value={formData.totalUnitsReceived}
                 readOnly
                 className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50"
               />
             </div>
           </div>
 
+          {/* Location Status Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">Location by Status:</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -250,6 +329,134 @@ const Form501A = () => {
             </div>
           </div>
 
+          {/* Date Selection Section */}
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-6">
+              {['Expiration Date', 'Retest Date', 'Use-by-Date'].map(dateType => (
+                <label key={dateType} className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    name="dateType"
+                    checked={formData.dateType === dateType}
+                    onChange={() => handleDateTypeChange(dateType)}
+                    className="h-4 w-4 text-indigo-600 border-gray-300"
+                  />
+                  <span className="text-sm text-gray-700">{dateType}</span>
+                </label>
+              ))}
+            </div>
+            {formData.dateType && (
+              <div className="mt-2">
+                <input
+                  type="date"
+                  value={formData.dateValue}
+                  onChange={(e) => setFormData(prev => ({ ...prev, dateValue: e.target.value }))}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Completed By Section */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Completed By (Name and Initials)/Date:
+            </label>
+            <input
+              type="text"
+              value={formData.completedBy}
+              onChange={(e) => setFormData(prev => ({ ...prev, completedBy: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Transaction Table */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900">Transactions</h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Transaction<br/>(In/Out/Adjust)</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Balance Location</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Entered By/Initials</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {formData.transactions.map((transaction, index) => (
+                    <tr key={index}>
+                      <td className="px-3 py-2">
+                        <input
+                          type="date"
+                          value={transaction.date}
+                          onChange={(e) => handleTransactionChange(index, 'date', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={transaction.reason}
+                          onChange={(e) => handleTransactionChange(index, 'reason', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={transaction.transactionType}
+                          onChange={(e) => handleTransactionChange(index, 'transactionType', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        >
+                          <option value="">Select...</option>
+                          <option value="In">In</option>
+                          <option value="Out">Out</option>
+                          <option value="Adjust">Adjust</option>
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          value={transaction.quantity}
+                          onChange={(e) => handleTransactionChange(index, 'quantity', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          value={transaction.balance}
+                          onChange={(e) => handleTransactionChange(index, 'balance', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={transaction.balanceLocation}
+                          onChange={(e) => handleTransactionChange(index, 'balanceLocation', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={transaction.enteredBy}
+                          onChange={(e) => handleTransactionChange(index, 'enteredBy', e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Comments Section */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Comments
