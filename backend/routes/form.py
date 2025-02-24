@@ -2,8 +2,6 @@
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required
 from ..models import ItemNumber, ReceivingData
-# from ..utils.form_handler import PDFFormHandler
-# from ..utils.pdf_handler import PDFHandler
 from ..utils.html_to_pdf_handler import HTMLToPDFHandler
 import os
 
@@ -71,6 +69,7 @@ def generate_519a():
     try:
         print("Receiving request for 519A PDF generation")
         data = request.get_json()
+        print("Received data:", data)  # Debug print
         
         pdf_handler = HTMLToPDFHandler()
         output_path = pdf_handler.generate_519a_pdf(data)
@@ -89,6 +88,9 @@ def generate_519a():
             
     except Exception as e:
         print(f"Error in route: {str(e)}")
+        # print(f"Full error: {e.__class__.__name__}: {str(e)}")  # More detailed error
+        # import traceback
+        # traceback.print_exc()  # Print full stack trace
         return jsonify({
             'error': str(e)
         }), 500

@@ -47,6 +47,7 @@ const AddDataForm = () => {
     ncmr: 'N/A',
     total_units_received: '',
     temp_device_in_alarm: 'No',
+    ncmr2: 'N/A',
     temp_device_deactivated: 'No',
     temp_device_returned_to_courier: 'No',
     comments_for_520b: ''
@@ -186,6 +187,7 @@ const AddDataForm = () => {
         ncmr: 'N/A',
         total_units_received: '',
         temp_device_in_alarm: 'No',
+        nmcr2: 'N/A',
         temp_device_deactivated: 'No',
         temp_device_returned_to_courier: 'No',
         comments_for_520b: ''
@@ -434,7 +436,7 @@ const AddDataForm = () => {
                     onChange={handleInputChange}
                     type="select"
                     options={availableItems}
-                    error={errors.item_id}
+                    error={errors.item_number}
                     required
                   />
                   <FormInput
@@ -514,6 +516,15 @@ const AddDataForm = () => {
                     error={errors.temp_device_in_alarm}
                   />
                   <FormInput
+                    label="NCMR2"
+                    name="ncmr2"
+                    value={receivingData.nmcr2}
+                    onChange={handleInputChange}
+                    type="select"
+                    options={YES_NO_OPTIONS}
+                    error={errors.ncmr}
+                  />
+                  <FormInput
                     label="Temperature Device Deactivated"
                     name="temp_device_deactivated"
                     value={receivingData.temp_device_deactivated}
@@ -556,6 +567,7 @@ const AddDataForm = () => {
                       ncmr: 'N/A',
                       total_units_received: '',
                       temp_device_in_alarm: 'No',
+                      nmcr2: 'N/A',
                       temp_device_deactivated: 'No',
                       temp_device_returned_to_courier: 'No',
                       comments_for_520b: ''

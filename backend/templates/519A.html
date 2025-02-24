@@ -17,63 +17,53 @@
             margin: 0 auto;
             box-sizing: border-box;
             background: white;
-            max-width: 180mm;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 0;
-            table-layout: fixed;
+            margin-bottom: 2mm;
         }
         td, th {
             border: 1px solid black;
             padding: 1.5mm;
-            height: 7mm;
         }
         .header-table {
             border: 3px double black;
             margin-bottom: 3mm;
         }
-        .title {
-            text-align: center;
-            font-weight: bold;
-            margin: 4mm 0;
-        }
-        .gray-bg {
-            background-color: #e6e6e6;
-        }
         .field-name {
             background-color: #e6e6e6;
         }
         .item-description {
-            height: 21mm !important;
+            height: 15mm;
             vertical-align: top;
         }
-        .tall-input-container {
-            height: calc(100% - 2mm);
-            padding: 1mm;
-        }
-        .input-area {
-            min-height: 4mm;
-            padding: 1mm;
-            border-bottom: 1px solid black;
-        }
-        .special-note {
+        .note-section {
             font-style: italic;
+            background-color: #f8f8f8;
             padding: 2mm;
+        }
+        .drug-movement-table {
+            margin-top: 3mm;
+        }
+        .drug-movement-table th {
+            background-color: #e6e6e6;
+            font-weight: normal;
+        }
+        .notes-box {
+            border: 3px double black;
+            margin-top: 3mm;
+            padding: 2mm;
+        }
+        .notes-box p {
+            margin: 1mm 0;
+        }
+        .footer {
+            margin-top: 3mm;
+            font-size: 8pt;
         }
         .must-not {
             font-weight: bold;
-        }
-        .footer {
-            margin-top: 4mm;
-        }
-        .notes-section {
-            border: 3px double black;
-        }
-        .notes-section td {
-            padding: 2px;
-            line-height: 1.2;
         }
     </style>
 </head>
@@ -81,9 +71,9 @@
     <!-- Header Section -->
     <table class="header-table">
         <tr>
-            <td width="50%">AdiraMedica LLC</td>
-            <td width="25%">Form Number:</td>
-            <td width="25%">FORM-519A</td>
+            <td style="width: 50%">AdiraMedica LLC</td>
+            <td style="width: 25%">Form Number:</td>
+            <td style="width: 25%">FORM-519A</td>
         </tr>
         <tr>
             <td>Title: Temperature Exposure Record</td>
@@ -92,126 +82,105 @@
         </tr>
     </table>
 
-    <!-- Information Section -->
+    <!-- Main Content -->
     <table>
         <tr>
-            <td class="field-name" width="25%">Receiving No.:</td>
-            <td width="35%">
-                <div class="input-area">{{ receiving_no }}</div>
-            </td>
-            <td class="field-name" width="15%">Item No.</td>
-            <td width="25%">
-                <div class="input-area">{{ item_no }}</div>
-            </td>
+            <td class="field-name" style="width: 25%">Receiving No.:</td>
+            <td style="width: 25%">{{ receiving_no }}</td>
+            <td class="field-name" style="width: 25%">Item No.</td>
+            <td style="width: 25%">{{ item_no }}</td>
         </tr>
         <tr>
             <td class="field-name item-description">Item Description:</td>
-            <td colspan="2" class="item-description">
-                <div class="tall-input-container">{{ item_description }}</div>
-            </td>
+            <td colspan="2" class="item-description">{{ item_description }}</td>
             <td>
-                <div>Lot No.: <div class="input-area">{{ lot_no }}</div></div>
+                Lot No.:<br>
+                {{ lot_no }}
             </td>
         </tr>
         <tr>
             <td class="field-name">Storage Conditions:</td>
-            <td>
-                <div class="input-area">{{ storage_conditions }}</div>
-            </td>
+            <td>{{ storage_conditions }}</td>
             <td class="field-name">Date and Time<br>Received</td>
-            <td>
-                <div class="input-area">{{ date_time_received }}</div>
-            </td>
+            <td>{{ date_time_received }}</td>
         </tr>
         <tr>
             <td class="field-name">Other Storage Conditions</td>
-            <td colspan="3">
-                <div class="input-area">{{ other_storage_conditions }}</div>
-            </td>
+            <td colspan="3">{{ other_storage_conditions }}</td>
         </tr>
         <tr>
             <td class="field-name">Temperature Device on<br>Alarm</td>
-            <td>
-                <div class="input-area">{{ temp_device_alarm }}</div>
-            </td>
-            <td class="field-name">Temperature Device<br>Deactivated</td>
-            <td>
-                <div class="input-area">{{ temp_device_deactivated }}</div>
-            </td>
+            <td>{{ temp_device_alarm }}</td>
+            <td class="field-name">Temperature<br>Device<br>Deactivated</td>
+            <td>{{ temp_device_deactivated }}</td>
         </tr>
         <tr>
             <td class="field-name">Temperature Device<br>Returned to Courier</td>
-            <td>
-                <div class="input-area">{{ temp_device_returned }}</div>
-            </td>
-            <td class="field-name">Maximum Exposure<br>Time</td>
-            <td>
-                <div class="input-area">{{ max_exposure_time }} (min)</div>
-            </td>
+            <td>{{ temp_device_returned }}</td>
+            <td class="field-name">Maximum<br>Exposure<br>Time</td>
+            <td>{{ max_exposure_time }}</td>
         </tr>
         <tr>
             <td class="field-name">Temper Time</td>
-            <td>
-                <div class="input-area">{{ temper_time }} (min)</div>
-            </td>
-            <td class="field-name">Working Exposure<br>Time</td>
-            <td>
-                <div class="input-area">{{ working_exposure_time }} (min)</div>
-            </td>
+            <td>{{ temper_time }}</td>
+            <td class="field-name">Working<br>Exposure<br>Time</td>
+            <td>{{ working_exposure_time }}</td>
         </tr>
         <tr>
-            <td colspan="4" class="special-note">
+            <td colspan="4" class="note-section">
                 NOTE: Create one Temperature Exposure Record for each container. DO NOT place insulated containers or dry ice inside a temperature-controlled storage unit
             </td>
         </tr>
         <tr>
-            <td>Container No.
-                <div class="input-area">{{ container_no }}</div>
-            </td>
-            <td>Total Units/<br>Container
-                <div class="input-area">{{ total_units_per_container }}</div>
-            </td>
-            <td colspan="2">Record Created By/Date
-                <div class="input-area">{{ record_created_by }}</div>
-            </td>
+            <td>Container No.</td>
+            <td>Total Units/<br>Container</td>
+            <td colspan="2">Record Created By/Date</td>
+        </tr>
+        <tr>
+            <td>{{ container_no }}</td>
+            <td>{{ total_units_per_container }}</td>
+            <td colspan="2">{{ record_created_by }} {{ record_created_date }}</td>
         </tr>
     </table>
 
     <!-- Drug Movement Section -->
-    <div class="title">DRUG MOVEMENT:</div>
-    <table>
-        <tr>
-            <th class="gray-bg" width="20%">Destination/<br>Comments</th>
-            <th width="10%">Date</th>
-            <th width="10%">Time</th>
-            <th class="gray-bg" width="15%">Exposure<br>Time (ET)</th>
-            <th class="gray-bg" width="15%">Cumulative<br>ET</th>
-            <th width="15%">Completed<br>By/Date</th>
-            <th width="15%">Verified<br>By/Date</th>
-        </tr>
-        {% for movement in drug_movements %}
-        <tr class="{{ loop.index0 % 2 == 0 ? 'gray-bg' : '' }}">
-            <td>{{ movement.destination }}</td>
-            <td>{{ movement.date }}</td>
-            <td>{{ movement.time }}</td>
-            <td>{{ movement.exposure_time }} {% if movement.exposure_time %}(min){% endif %}</td>
-            <td>{{ movement.cumulative_et }} {% if movement.cumulative_et %}(min){% endif %}</td>
-            <td>{{ movement.completed_by }}</td>
-            <td>{{ movement.verified_by }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div style="margin-top: 4mm;">
+        <h3 style="margin: 2mm 0; font-size: 10pt;">DRUG MOVEMENT:</h3>
+        <table class="drug-movement-table">
+            <tr>
+                <th style="width: 20%">Destination/<br>Comments</th>
+                <th style="width: 12%">Date</th>
+                <th style="width: 12%">Time</th>
+                <th style="width: 14%">Exposure<br>Time (ET)</th>
+                <th style="width: 14%">Cumulative<br>ET</th>
+                <th style="width: 14%">Completed<br>By/Date</th>
+                <th style="width: 14%">Verified<br>By/Date</th>
+            </tr>
+            {% for movement in drug_movements %}
+            <tr>
+                <td>{{ movement.destination }}</td>
+                <td>{{ movement.date }}</td>
+                <td>{{ movement.time }}</td>
+                <td>{{ movement.exposure_time }}</td>
+                <td>{{ movement.cumulative_et }}</td>
+                <td>{{ movement.completed_by }}</td>
+                <td>{{ movement.verified_by }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 
-    <table class="notes-section">
-        <tr>
-            <td><span class="notes-title">Notes: </span>1. Exposure Time <span class="must-not">MUST NOT EXCEED</span> the Working Exposure Time<br>
-            2. Cumulative Exposure Time <span class="must-not">MUST NOT EXCEED</span> the Maximum Exposure Time</td>
-        </tr>
-    </table>
+    <!-- Notes Section -->
+    <div class="notes-box">
+        <p>Notes:</p>
+        <p>1. Exposure Time <span class="must-not">MUST NOT EXCEED</span> the Working Exposure Time</p>
+        <p>2. Cumulative Exposure Time <span class="must-not">MUST NOT EXCEED</span> the Maximum Exposure Time</p>
+    </div>
 
+    <!-- Footer -->
     <div class="footer">
-        <p style="margin: 1mm 0;">Effective Date: 03OCT2022</p>
-        <p style="margin: 1mm 0;">Page 1 of 1</p>
+        <p>Effective Date: 03OCT2022</p>
+        <p>Page 1 of 1</p>
     </div>
 </body>
 </html>

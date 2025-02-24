@@ -119,29 +119,45 @@ class HTMLToPDFHandler:
 
     def generate_519a_pdf(self, data):
         try:
+            print("Received data for 519A:", data)  # Debug print
+            
             template_data = {
-                'receiving_no': data.get('Receiving No', ''),
-                'item_no': data.get('Item No', ''),
-                'item_description': data.get('Item Description', ''),
-                'lot_no': data.get('Lot No', ''),
-                'storage_conditions': data.get('Storage Conditions', ''),
-                'date_time_received': data.get('Date and Time Received', ''),
-                'other_storage_conditions': data.get('Other Storage Conditions', ''),
-                'temp_device_alarm': data.get('Temperature Device on Alarm', ''),
-                'temp_device_deactivated': data.get('Temperature Device Deactivated', ''),
-                'temp_device_returned': data.get('Temperature Device Returned to Courier', ''),
-                'max_exposure_time': data.get('Maximum Exposure Time', ''),
-                'temper_time': data.get('Temper Time', ''),
-                'working_exposure_time': data.get('Working Exposure Time', ''),
-                'container_no': data.get('Container No', ''),
-                'total_units_per_container': data.get('Total Units/Container', ''),
-                'record_created_by': data.get('Record Created By', ''),
-                'drug_movements': data.get('drugMovements', [])
+                'receiving_no': data.get('receiving_no', ''),
+                'item_no': data.get('item_no', ''),
+                'item_description': data.get('item_description', ''),
+                'lot_no': data.get('lot_no', ''),
+                'storage_conditions': data.get('storage_conditions', ''),
+                'date_time_received': data.get('date_time_received', ''),
+                'other_storage_conditions': data.get('other_storage_conditions', ''),
+                'temp_device_alarm': data.get('temp_device_alarm', ''),
+                'temp_device_deactivated': data.get('temp_device_deactivated', ''),
+                'temp_device_returned': data.get('temp_device_returned', ''),
+                'max_exposure_time': str(data.get('max_exposure_time', '')) + ' (min)',
+                'temper_time': str(data.get('temper_time', '')) + ' (min)',
+                'working_exposure_time': str(data.get('working_exposure_time', '')) + ' (min)',
+                'container_no': data.get('container_no', ''),
+                'total_units_per_container': data.get('total_units_per_container', ''),
+                'record_created_by': data.get('record_created_by', ''),
+                'record_created_date': data.get('record_created_date', ''),
+                'drug_movements': [
+                    {
+                        'destination': movement.get('destination', ''),
+                        'date': movement.get('date', ''),
+                        'time': movement.get('time', ''),
+                        'exposure_time': movement.get('exposure_time', ''),
+                        'cumulative_et': movement.get('cumulative_et', ''),
+                        'completed_by': movement.get('completed_by', ''),
+                        'verified_by': movement.get('verified_by', '')
+                    }
+                    for movement in data.get('drug_movements', [])
+                ]
             }
 
+            print("Template data:", template_data)  # Debug print
+            
             rendered_html = render_template('519A.html', **template_data)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = self.generated_dir / f"519A_{data.get('Receiving No', 'unknown')}_{timestamp}.pdf"
+            output_path = self.generated_dir / f"519A_{data.get('receiving_no', 'unknown')}_{timestamp}.pdf"
             
             pdfkit.from_string(
                 rendered_html,
@@ -149,9 +165,9 @@ class HTMLToPDFHandler:
                 options=self.pdf_options,
                 configuration=self.config
             )
-
+            
             return output_path
-
+            
         except Exception as e:
             print(f"Error generating 519A PDF: {str(e)}")
             raise

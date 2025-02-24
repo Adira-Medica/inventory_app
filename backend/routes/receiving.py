@@ -10,13 +10,24 @@ bp = Blueprint('receiving', __name__, url_prefix='/api/receiving')
 @bp.route('/create', methods=['POST'])
 @jwt_required()
 def create_receiving():
-    data = request.get_json()
-    new_receiving = ReceivingData(**data)
+    try:
     
-    db.session.add(new_receiving)
-    db.session.commit()
-    
-    return jsonify({'message': 'Receiving data created successfully'}), 201
+        data = request.get_json()
+
+        if 'item_id' in data:
+            data['item_number'] = data.pop('item_id')
+
+        new_receiving = ReceivingData(**data)
+        
+        db.session.add(new_receiving)
+        db.session.commit()
+        
+        return jsonify({'message': 'Receiving data created successfully'}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating receiving data: {str(e)}")  # Debug print
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/get', methods=['GET'])
 @jwt_required()

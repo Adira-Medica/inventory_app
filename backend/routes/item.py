@@ -151,7 +151,10 @@ def get_item_detail(item_number):
             'uom': item.uom,
             'controlled': item.controlled,
             'temp_storage_conditions': item.temp_storage_conditions,
-            'other_storage_conditions': item.other_storage_conditions
+            'other_storage_conditions': item.other_storage_conditions,
+            'max_exposure_time': item.max_exposure_time,  # Added
+            'temper_time': item.temper_time,             # Added
+            'working_exposure_time': item.working_exposure_time  # Added
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

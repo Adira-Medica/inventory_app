@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 import EditModal from './modals/EditModal';
+import SearchBar from './common/SearchBar';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -14,6 +15,11 @@ const EditDeleteTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingData, setEditingData] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchError, setSearchError] = useState('');
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -26,6 +32,7 @@ const EditDeleteTable = () => {
             originalIndex: index
           }));
           setItemData(itemsWithOrder);
+          setFilteredData(itemsWithOrder);
         }
       } else {
         const response = await api.get('/receiving/get');
@@ -35,11 +42,14 @@ const EditDeleteTable = () => {
             originalIndex: index
           }));
           setReceivingData(receivingWithOrder);
+          setFilteredData(receivingWithOrder);
         }
       }
+      setSearchError('');
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to fetch data');
+      setSearchError('Error loading data');
     } finally {
       setIsLoading(false);
     }
@@ -50,26 +60,121 @@ const EditDeleteTable = () => {
     setCurrentPage(1);
   }, [fetchData, activeTab]);
 
-  const handleObsolete = async (id) => {
+  const handleResultSelect = useCallback((result) => {
+    const elementId = activeTab === 'items' ? 
+      `item-${result.id}` : 
+      `receiving-${result.id}`;
+      
+    const element = document.getElementById(elementId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.classList.add('highlight-row');
+      setTimeout(() => {
+        if (element) {
+          element.classList.remove('highlight-row');
+        }
+      }, 2000);
+    }
+    setIsSearchOpen(false);
+  }, [activeTab]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (!isSearchOpen) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev => 
+          prev < filteredData.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev => prev > 0 ? prev - 1 : prev);
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < filteredData.length) {
+          handleResultSelect(filteredData[selectedIndex]);
+        }
+        break;
+      case 'Escape':
+        setIsSearchOpen(false);
+        break;
+      default:
+        break;
+    }
+  }, [isSearchOpen, filteredData, selectedIndex, handleResultSelect]);
+
+  useEffect(() => {
+    const data = activeTab === 'items' ? itemData : receivingData;
+    if (searchTerm.trim() === '') {
+      setFilteredData(data);
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase();
+    const filtered = data.filter(item => {
+      if (activeTab === 'items') {
+        return (
+          (item.item_number || '').toLowerCase().includes(searchTermLower) ||
+          (item.description || '').toLowerCase().includes(searchTermLower) ||
+          (item.client || '').toLowerCase().includes(searchTermLower) ||
+          (item.protocol_number || '').toLowerCase().includes(searchTermLower) ||
+          (item.vendor || '').toLowerCase().includes(searchTermLower) ||
+          (item.uom || '').toLowerCase().includes(searchTermLower) ||
+          (item.controlled || '').toLowerCase().includes(searchTermLower) ||
+          (item.study_type || '').toLowerCase().includes(searchTermLower)
+        );
+      } else {
+        return (
+          (item.receiving_no || '').toLowerCase().includes(searchTermLower) ||
+          (item.item_number || '').toLowerCase().includes(searchTermLower) ||
+          (item.tracking_number || '').toLowerCase().includes(searchTermLower) ||
+          (item.lot_no || '').toLowerCase().includes(searchTermLower) ||
+          (item.po_no || '').toLowerCase().includes(searchTermLower)
+        );
+      }
+    });
+
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  }, [searchTerm, itemData, receivingData, activeTab]);
+
+  const handleObsolete = useCallback(async (id) => {
     try {
-      const endpoint = activeTab === 'items' 
+      const endpoint = activeTab === 'items'
         ? `/item/toggle-obsolete/${id}`
         : `/receiving/toggle-obsolete/${id}`;
       
       await api.put(endpoint);
       
       if (activeTab === 'items') {
-        setItemData(prevData => 
-          prevData.map(item => 
-            item.id === id 
+        setItemData(prevData =>
+          prevData.map(item =>
+            item.id === id
+              ? { ...item, is_obsolete: !item.is_obsolete }
+              : item
+          )
+        );
+        setFilteredData(prevData =>
+          prevData.map(item =>
+            item.id === id
               ? { ...item, is_obsolete: !item.is_obsolete }
               : item
           )
         );
       } else {
-        setReceivingData(prevData => 
-          prevData.map(item => 
-            item.id === id 
+        setReceivingData(prevData =>
+          prevData.map(item =>
+            item.id === id
+              ? { ...item, is_obsolete: !item.is_obsolete }
+              : item
+          )
+        );
+        setFilteredData(prevData =>
+          prevData.map(item =>
+            item.id === id
               ? { ...item, is_obsolete: !item.is_obsolete }
               : item
           )
@@ -81,50 +186,59 @@ const EditDeleteTable = () => {
       console.error('Error updating obsolete status:', error);
       toast.error('Failed to update obsolete status');
     }
-  };
+  }, [activeTab]);
 
-  const handleEdit = (id, type) => {
+  const handleEdit = useCallback((id, type) => {
     const data = type === 'items'
       ? itemData.find(item => item.id === id)
       : receivingData.find(item => item.id === id);
-   
+    
     setEditingData({ ...data, type });
     setEditModalOpen(true);
-  };
+  }, [itemData, receivingData]);
 
-  const handleUpdate = (updatedData) => {
+  const handleUpdate = useCallback((updatedData) => {
     if (!updatedData?.id) return;
 
     if (activeTab === 'items') {
-      setItemData(prevData => 
-        prevData.map(item => 
+      setItemData(prevData =>
+        prevData.map(item =>
+          item.id === updatedData.id ? { ...updatedData, display_order: item.display_order } : item
+        )
+      );
+      setFilteredData(prevData =>
+        prevData.map(item =>
           item.id === updatedData.id ? { ...updatedData, display_order: item.display_order } : item
         )
       );
     } else {
-      setReceivingData(prevData => 
-        prevData.map(item => 
+      setReceivingData(prevData =>
+        prevData.map(item =>
+          item.id === updatedData.id ? { ...updatedData, display_order: item.display_order } : item
+        )
+      );
+      setFilteredData(prevData =>
+        prevData.map(item =>
           item.id === updatedData.id ? { ...updatedData, display_order: item.display_order } : item
         )
       );
     }
-  };
+  }, [activeTab]);
 
-  const getCurrentData = () => {
-    const data = activeTab === 'items' ? itemData : receivingData;
-    if (!data?.length) return [];
+  const getCurrentData = useCallback(() => {
+    if (!filteredData?.length) return [];
     
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const sortedData = [...data].sort((a, b) => (a.display_order || 0) - (b.display_order || 0)
-  );
+    const sortedData = [...filteredData].sort((a, b) => 
+      (a.display_order || 0) - (b.display_order || 0)
+    );
+    
     return sortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  };
+  }, [filteredData, currentPage]);
 
-  const totalPages = Math.ceil(
-    (activeTab === 'items' ? itemData.length : receivingData.length) / ITEMS_PER_PAGE
-  );
+  const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
-  const TableActions = ({ id, onEdit, isObsolete, onObsolete }) => (
+  const TableActions = useCallback(({ id, onEdit, isObsolete, onObsolete }) => (
     <div className="flex space-x-2">
       <button
         onClick={() => onEdit(id)}
@@ -143,9 +257,9 @@ const EditDeleteTable = () => {
         {isObsolete ? 'Obsoleted' : 'Obsolete'}
       </button>
     </div>
-  );
+  ), []);
 
-  const PaginationControls = () => (
+  const PaginationControls = useCallback(() => (
     <div className="flex justify-between items-center mt-4 py-4 px-6">
       <div className="text-sm text-gray-700">
         Showing page {currentPage} of {totalPages || 1}
@@ -163,19 +277,36 @@ const EditDeleteTable = () => {
           Previous
         </button>
         <div className="flex space-x-1">
-          {[...Array(totalPages || 0)].map((_, index) => (
-            <button
-              key={index + 1}
-              onClick={() => setCurrentPage(index + 1)}
-              className={`px-3 py-1 rounded ${
-                currentPage === index + 1
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300'
-              }`}
-            >
-              {index + 1}
-            </button>
-          ))}
+          {[...Array(Math.min(totalPages, 5) || 0)].map((_, index) => {
+            let pageNum;
+            if (totalPages <= 5) {
+              // Show all pages if 5 or fewer
+              pageNum = index + 1;
+            } else if (currentPage <= 3) {
+              // Near the start
+              pageNum = index + 1;
+            } else if (currentPage >= totalPages - 2) {
+              // Near the end
+              pageNum = totalPages - 4 + index;
+            } else {
+              // In the middle
+              pageNum = currentPage - 2 + index;
+            }
+            
+            return (
+              <button
+                key={pageNum}
+                onClick={() => setCurrentPage(pageNum)}
+                className={`px-3 py-1 rounded ${
+                  currentPage === pageNum
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
         </div>
         <button
           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages || 1))}
@@ -190,9 +321,9 @@ const EditDeleteTable = () => {
         </button>
       </div>
     </div>
-  );
+  ), [currentPage, totalPages]);
 
-  const ItemTable = () => {
+  const ItemTable = useCallback(() => {
     const data = getCurrentData();
     if (!data?.length) {
       return <div className="p-4 text-center text-gray-500">No items found</div>;
@@ -229,7 +360,11 @@ const EditDeleteTable = () => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((item) => (
-            <tr key={item.id} className={item.is_obsolete ? 'bg-red-100' : ''}>
+            <tr 
+              key={item.id} 
+              id={`item-${item.id}`}
+              className={`transition-colors duration-200 ${item.is_obsolete ? 'bg-red-100' : ''}`}
+            >
               <td className="px-6 py-4 whitespace-nowrap">{item.item_number}</td>
               <td className="px-6 py-4 whitespace-nowrap">{item.description}</td>
               <td className="px-6 py-4 whitespace-nowrap">{item.client}</td>
@@ -259,9 +394,9 @@ const EditDeleteTable = () => {
         </tbody>
       </table>
     );
-  };
+  }, [getCurrentData, handleEdit, handleObsolete]);
 
-  const ReceivingTable = () => {
+  const ReceivingTable = useCallback(() => {
     const data = getCurrentData();
     if (!data?.length) {
       return <div className="p-4 text-center text-gray-500">No receiving data found</div>;
@@ -297,7 +432,11 @@ const EditDeleteTable = () => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((receiving) => (
-            <tr key={receiving.id} className={receiving.is_obsolete ? 'bg-red-100' : ''}>
+            <tr 
+              key={receiving.id}
+              id={`receiving-${receiving.id}`}
+              className={`transition-colors duration-200 ${receiving.is_obsolete ? 'bg-red-100' : ''}`}
+            >
               <td className="px-6 py-4 whitespace-nowrap">{receiving.item_number}</td>
               <td className="px-6 py-4 whitespace-nowrap">{receiving.receiving_no}</td>
               <td className="px-6 py-4 whitespace-nowrap">{receiving.tracking_number}</td>
@@ -326,7 +465,7 @@ const EditDeleteTable = () => {
         </tbody>
       </table>
     );
-  };
+  }, [getCurrentData, handleEdit, handleObsolete]);
 
   return (
     <div className="min-h-screen bg-gray-100 py-8">
@@ -337,6 +476,8 @@ const EditDeleteTable = () => {
               onClick={() => {
                 setActiveTab('items');
                 setCurrentPage(1);
+                setSearchTerm('');
+                setIsSearchOpen(false);
               }}
               className={`px-4 py-2 rounded-lg ${
                 activeTab === 'items'
@@ -350,6 +491,8 @@ const EditDeleteTable = () => {
               onClick={() => {
                 setActiveTab('receiving');
                 setCurrentPage(1);
+                setSearchTerm('');
+                setIsSearchOpen(false);
               }}
               className={`px-4 py-2 rounded-lg ${
                 activeTab === 'receiving'
@@ -362,6 +505,30 @@ const EditDeleteTable = () => {
           </div>
         </div>
 
+        <div className="mb-4">
+          <SearchBar
+            searchQuery={searchTerm}
+            isLoading={isLoading}
+            error={searchError}
+            results={filteredData.slice(0, 10)} // Limit to first 10 for performance
+            selectedIndex={selectedIndex}
+            isOpen={isSearchOpen && searchTerm.length > 0}
+            onSearchChange={(e) => {
+              setSearchTerm(e.target.value);
+              setIsSearchOpen(true);
+              setSelectedIndex(-1);
+            }}
+            onKeyDown={handleKeyDown}
+            onClear={() => {
+              setSearchTerm('');
+              setIsSearchOpen(false);
+              setSelectedIndex(-1);
+            }}
+            onSelect={handleResultSelect}
+            activeTab={activeTab}
+          />
+        </div>
+
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             {isLoading ? (
@@ -371,7 +538,7 @@ const EditDeleteTable = () => {
             ) : (
               <>
                 {activeTab === 'items' ? <ItemTable /> : <ReceivingTable />}
-                {(activeTab === 'items' ? itemData : receivingData).length > 0 && <PaginationControls />}
+                {filteredData.length > 0 && <PaginationControls />}
               </>
             )}
 
@@ -391,4 +558,4 @@ const EditDeleteTable = () => {
   );
 };
 
-export default EditDeleteTable;
+export default React.memo(EditDeleteTable);
