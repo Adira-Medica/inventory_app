@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import Login from './components/Login';
+import Register from './components/Register';
 import LandingPage from './components/LandingPage';
 import AddDataForm from './components/AddDataForm';
 import EditDeleteTable from './components/EditDeleteTable';
@@ -23,6 +24,8 @@ function App() {
         
         {/* Public route */}
         <Route path="/login" element={<Login />} />
+
+        <Route path="/register" element={<Register />} />
         
         {/* Protected routes */}
         <Route 
