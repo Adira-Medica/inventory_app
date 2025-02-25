@@ -6,13 +6,20 @@ import {
   DocumentTextIcon, 
   ClipboardDocumentListIcon, 
   PlusCircleIcon, 
-  DocumentDuplicateIcon 
+  DocumentDuplicateIcon,
+  ArrowRightOnRectangleIcon 
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+    toast.success('Logged out successfully');
+  };
 
   const handleCardClick = (path) => {
     console.log('Card clicked, path:', path);
@@ -118,6 +125,22 @@ const LandingPage = () => {
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gray-50"
     >
+      {/* Header with Logout Button */}
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">AdiraMedica</h1>
+          <motion.button
+            onClick={handleLogout}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg shadow-sm hover:bg-red-600 transition-colors"
+          >
+            <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+            Logout
+          </motion.button>
+        </div>
+      </header>
+
       <div className="max-w-7xl mx-auto px-4 py-12">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
@@ -131,7 +154,7 @@ const LandingPage = () => {
             transition={{ type: "spring", stiffness: 200 }}
             className="text-4xl font-bold text-gray-900 mb-4"
           >
-            AdiraMedica Inventory System
+            Inventory Management System
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}

@@ -1,36 +1,29 @@
 // src/App.js
-import React from 'react';  // Removed useEffect since we'll handle auth differently
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Login from './components/Login';
 import LandingPage from './components/LandingPage';
-import EditDeleteTable from './components/EditDeleteTable';
 import AddDataForm from './components/AddDataForm';
+import EditDeleteTable from './components/EditDeleteTable';
 import Form520B from './components/forms/Form520B';
-// import Form501A519A from './components/forms/Form501A519A';
-import Form519A from './components/forms/Form519A';
-import 'react-toastify/dist/ReactToastify.css';
 import Form501A from './components/forms/Form501A';
-
-function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" replace />;
-}
+import Form519A from './components/forms/Form519A';
+import PrivateRoute from './components/common/PrivateRoute';
 
 function App() {
   return (
     <>
       <ToastContainer />
       <Routes>
-        {/* Root route */}
-        <Route 
-          path="/" 
-          element={<Navigate to="/login" replace />} 
-        />
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         
         {/* Public route */}
         <Route path="/login" element={<Login />} />
-
+        
         {/* Protected routes */}
         <Route 
           path="/landing" 
@@ -41,18 +34,18 @@ function App() {
           } 
         />
         <Route 
-          path="/edit-data" 
-          element={
-            <PrivateRoute>
-              <EditDeleteTable />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
           path="/add-data" 
           element={
             <PrivateRoute>
               <AddDataForm />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/edit-data" 
+          element={
+            <PrivateRoute>
+              <EditDeleteTable />
             </PrivateRoute>
           } 
         />
@@ -80,8 +73,8 @@ function App() {
             </PrivateRoute>
           } 
         />
-
-        {/* Catch-all route */}
+        
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </>
