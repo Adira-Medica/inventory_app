@@ -1,14 +1,93 @@
 // src/context/AuthContext.js
-import React, { createContext, useState } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import api from '../api/axios';
+import { toast } from 'react-toastify';
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load user data from JWT on startup
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      parseUserFromToken(token);
+    } else {
+      setLoading(false);
+    }
+  }, []);
+  
+  // Parse user data from JWT token
+  const parseUserFromToken = (token) => {
+    try {
+      // Simple parsing of JWT payload
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      if (payload.exp * 1000 < Date.now()) {
+        // Token expired
+        localStorage.removeItem('token');
+        setUser(null);
+      } else {
+        // Valid token, set user data
+        setUser({
+          id: payload.sub?.id || payload.sub,
+          username: payload.sub?.username || '',
+          role: payload.sub?.role || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error parsing token:', error);
+      localStorage.removeItem('token');
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Login function
+  const login = async (credentials) => {
+    try {
+      const response = await api.post('/auth/login', credentials);
+      if (response.data && response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        setUser({
+          id: response.data.user.id,
+          username: response.data.user.username,
+          role: response.data.user.role
+        });
+        return true;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(error.response?.data?.error || 'Login failed');
+      return false;
+    }
+  };
+  
+  // Logout function
+  // src/context/AuthContext.js - Update the logout function
+const logout = async () => {
+  try {
+    // Call the backend logout endpoint
+    await api.post('/auth/logout');
+    console.log('Logged out on server');
+  } catch (error) {
+    console.error('Error logging out on server:', error);
+    // Continue with logout even if the server request fails
+  } finally {
+    // Remove token and user data from local storage
+    localStorage.removeItem('token');
+    setUser(null);
+  }
+};
 
   const value = {
     user,
-    setUser
+    loading,
+    login,
+    logout
   };
 
   return (

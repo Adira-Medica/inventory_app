@@ -2,74 +2,96 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  DocumentTextIcon, 
-  ClipboardDocumentListIcon, 
-  PlusCircleIcon, 
+import { useAuth } from '../hooks/useAuth';
+import {
+  DocumentTextIcon,
+  ClipboardDocumentListIcon,
+  PlusCircleIcon,
   DocumentDuplicateIcon,
-  ArrowRightOnRectangleIcon 
+  ArrowRightOnRectangleIcon,
+  CogIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 
 const LandingPage = () => {
   const navigate = useNavigate();
-  const token = localStorage.getItem('token');
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    logout();
     navigate('/login');
     toast.success('Logged out successfully');
   };
 
   const handleCardClick = (path) => {
-    console.log('Card clicked, path:', path);
-    if (!token) {
-      console.log('No token found');
-      toast.error('Please login first');
-      navigate('/login');
-      return;
-    }
-    console.log('Navigating to:', path);
     navigate(path);
   };
 
-  const cards = [
-    {
-      title: "Add Data",
-      description: "Add new items or receiving data",
-      icon: PlusCircleIcon,
-      path: "/add-data",
-      color: "bg-emerald-500"
-    },
-    {
-      title: "Data Management",
-      description: "Manage inventory items and receiving data",
-      icon: ClipboardDocumentListIcon,
-      path: "/edit-data",
-      color: "bg-blue-500"
-    },
+  // Define cards based on user role
+  let cards = [
     {
       title: "Form 520B",
       description: "Generate and manage 520B forms",
       icon: DocumentTextIcon,
       path: "/forms/520b",
-      color: "bg-purple-500"
+      color: "bg-purple-500",
+      minRole: "user" // All roles can access this
     },
     {
       title: "Form 501A",
       description: "Generate and manage 501A forms",
       icon: DocumentDuplicateIcon,
       path: "/forms/501a",
-      color: "bg-indigo-500"
+      color: "bg-indigo-500",
+      minRole: "user" // All roles can access this
     },
     {
       title: "Form 519A",
       description: "Generate and manage 519A forms",
       icon: DocumentTextIcon,
       path: "/forms/519a",
-      color: "bg-pink-500"
+      color: "bg-pink-500",
+      minRole: "user" // All roles can access this
     }
   ];
+
+  // Add manager-specific cards
+  if (user?.role === 'manager' || user?.role === 'admin') {
+    cards = [
+      ...cards,
+      {
+        title: "Add Data",
+        description: "Add new items or receiving data",
+        icon: PlusCircleIcon,
+        path: "/add-data",
+        color: "bg-emerald-500",
+        minRole: "manager"
+      },
+      {
+        title: "Data Management",
+        description: "Manage inventory items and receiving data",
+        icon: ClipboardDocumentListIcon,
+        path: "/edit-data",
+        color: "bg-blue-500",
+        minRole: "manager"
+      },
+    ];
+  }
+
+  // Add admin-specific card
+  if (user?.role === 'admin') {
+    cards.push({
+      title: "Admin Dashboard",
+      description: "Manage users, system settings and view logs",
+      icon: CogIcon,
+      path: "/admin",
+      color: "bg-red-500",
+      minRole: "admin"
+    });
+  }
+
+  // Sort cards by title
+  cards.sort((a, b) => a.title.localeCompare(b.title));
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -82,12 +104,12 @@ const LandingPage = () => {
   };
 
   const cardVariants = {
-    hidden: { 
+    hidden: {
       opacity: 0,
       y: 20,
       scale: 0.95
     },
-    visible: { 
+    visible: {
       opacity: 1,
       y: 0,
       scale: 1,
@@ -97,7 +119,7 @@ const LandingPage = () => {
         damping: 10
       }
     },
-    hover: { 
+    hover: {
       scale: 1.05,
       transition: {
         type: "spring",
@@ -105,8 +127,8 @@ const LandingPage = () => {
         damping: 10
       }
     },
-    tap: { 
-      scale: 0.98 
+    tap: {
+      scale: 0.98
     }
   };
 
@@ -121,14 +143,21 @@ const LandingPage = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }} 
+      initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gray-50"
     >
       {/* Header with Logout Button */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">AdiraMedica</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900">AdiraMedica</h1>
+            {user && (
+              <span className="ml-4 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
+                {user.role}
+              </span>
+            )}
+          </div>
           <motion.button
             onClick={handleLogout}
             whileHover={{ scale: 1.05 }}
@@ -140,15 +169,14 @@ const LandingPage = () => {
           </motion.button>
         </div>
       </header>
-
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <motion.h1 
+          <motion.h1
             initial={{ scale: 0.9 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
@@ -156,17 +184,16 @@ const LandingPage = () => {
           >
             Inventory Management System
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
             className="text-lg text-gray-600"
           >
-            Manage your inventory and generate forms efficiently
+            Welcome, {user?.username}! Access the features below based on your role permissions.
           </motion.p>
         </motion.div>
-
-        <motion.div 
+        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -184,7 +211,7 @@ const LandingPage = () => {
               <div className="relative bg-white rounded-xl shadow-lg overflow-hidden">
                 <div className={`${card.color} absolute top-0 left-0 w-2 h-full`} />
                 <div className="p-6">
-                  <motion.div 
+                  <motion.div
                     variants={iconVariants}
                     className={`${card.color} inline-block p-3 rounded-lg text-white mb-4`}
                   >

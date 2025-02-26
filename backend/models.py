@@ -21,6 +21,9 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     active = db.Column(db.Boolean, default=True)
+    # Add approval status field
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'approved', 'rejected'
+    registration_date = db.Column(db.DateTime, default=datetime.utcnow)
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

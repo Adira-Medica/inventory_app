@@ -1,11 +1,12 @@
 // src/components/Login.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Add Link import
+import { useNavigate, Link } from 'react-router-dom'; 
 import { toast } from 'react-toastify';
-import api from '../api/axios';
+import { useAuth } from '../hooks/useAuth';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { user, login } = useAuth();
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -14,30 +15,24 @@ const Login = () => {
 
   // Check if user is already logged in
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
+    if (user) {
       navigate('/landing', { replace: true });
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+   
     try {
-      const response = await api.post('/auth/login', credentials);
-      
-      if (response.data && response.data.token) {
-        localStorage.setItem('token', response.data.token);
+      const success = await login(credentials);
+      if (success) {
         toast.success('Login successful!');
         navigate('/landing', { replace: true });
-      } else {
-        throw new Error('No token received');
       }
     } catch (error) {
       console.error('Login error:', error);
-      localStorage.removeItem('token');
-      toast.error(error.response?.data?.error || 'Login failed');
+      toast.error('Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -49,15 +44,14 @@ const Login = () => {
         <h2 className="text-center text-3xl font-extrabold text-gray-900">
           Sign in to your account
         </h2>
-        
-        {/* Add this paragraph with link to register */}
+       
         <p className="mt-2 text-center text-sm text-gray-600">
           Don't have an account?{" "}
           <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
             Register here
           </Link>
         </p>
-        
+       
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
             <input

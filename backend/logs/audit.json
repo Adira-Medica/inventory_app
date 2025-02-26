@@ -1,0 +1,73 @@
+[
+    {
+        "id": 1740537915.953168,
+        "timestamp": "2025-02-25T21:45:15.953168",
+        "username": "admin",
+        "action": "Approve",
+        "details": "Approved user registration: Veera",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539369.216568,
+        "timestamp": "2025-02-25T22:09:29.216568",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539386.729973,
+        "timestamp": "2025-02-25T22:09:46.729973",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539409.6808,
+        "timestamp": "2025-02-25T22:10:09.680800",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Generate Form",
+        "details": "Generated 501A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539424.719482,
+        "timestamp": "2025-02-25T22:10:24.719482",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539647.950008,
+        "timestamp": "2025-02-25T22:14:07.950008",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539658.016231,
+        "timestamp": "2025-02-25T22:14:18.016231",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740539682.108441,
+        "timestamp": "2025-02-25T22:14:42.108441",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    }
+]
