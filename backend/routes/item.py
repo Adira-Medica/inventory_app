@@ -2,8 +2,8 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-
 from ..utils.role_checker import role_required
+from ..utils.audit_logger import log_activity
 from ..models import ItemNumber
 from ..extensions import db
 from sqlalchemy import func
@@ -30,7 +30,7 @@ def check_description():
 # backend/routes/item.py
 @bp.route('/create', methods=['POST'])
 @jwt_required()
-# @role_required(['admin', 'manager'])  # Only admin and manager can create items
+@role_required(['admin', 'manager'])  # Only admin and manager can create items
 def create_item():
     try:
         current_user = get_jwt_identity()
@@ -53,6 +53,13 @@ def create_item():
         
         db.session.add(new_item)
         db.session.commit()
+
+        # Log this activity
+        log_activity(
+            action="Create",
+            details=f"Created new item: {data['item_number']}"
+        )
+
         return jsonify({'message': 'Item created successfully'}), 201
     except Exception as e:
         db.session.rollback()
@@ -96,6 +103,7 @@ def get_items():
 
 @bp.route('/update/<int:id>', methods=['PUT'])
 @jwt_required()
+@role_required(['admin', 'manager'])
 def update_item(id):
     try:
         item = ItemNumber.query.get_or_404(id)
@@ -112,6 +120,14 @@ def update_item(id):
         item.display_order = current_display_order
         
         db.session.commit()
+
+        # Log this activity
+        from ..utils.audit_logger import log_activity
+        log_activity(
+            action="Update",
+            details=f"Updated item: {item.item_number}"
+        )
+
         return jsonify({'message': 'Item updated successfully'}), 200
     except Exception as e:
         db.session.rollback()
@@ -119,10 +135,19 @@ def update_item(id):
 
 @bp.route('/delete/<int:id>', methods=['DELETE'])
 @jwt_required()
+@role_required(['admin', 'manager'])
 def delete_item(id):
     item = ItemNumber.query.get_or_404(id)
     db.session.delete(item)
     db.session.commit()
+
+    # Log this activity
+        
+    log_activity(
+        action="Delete",
+        details=f"Deleted item: {item.item_number}"
+    )
+
     return jsonify({'message': 'Item deleted successfully'}), 200
 
 @bp.route('/numbers', methods=['GET'])
@@ -161,11 +186,20 @@ def get_item_detail(item_number):
 
 @bp.route('/toggle-obsolete/<int:id>', methods=['PUT'])
 @jwt_required()
+@role_required(['admin', 'manager'])
 def toggle_item_obsolete(id):
     try:
         item = ItemNumber.query.get_or_404(id)
         item.is_obsolete = not item.is_obsolete
         db.session.commit()
+
+        # Log this activity
+        from ..utils.audit_logger import log_activity
+        log_activity(
+            action="Obsolete",
+            details=f"Obsoleted item: {item.item_number}"
+        )
+
         return jsonify({
             'message': 'Item obsolete status updated',
             'is_obsolete': item.is_obsolete

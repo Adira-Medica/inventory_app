@@ -7,14 +7,14 @@ import api from '../api/axios';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ 
-    username: '', 
-    password: '', 
-    confirmPassword: '',
-    role: 'user' // Default role
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    confirmPassword: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -22,23 +22,23 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+   
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match.");
       return;
     }
-
+    
     setIsLoading(true);
+    
     try {
-      await api.post('/auth/register', { 
-        username: formData.username, 
-        password: formData.password,
-        role: formData.role
+      const response = await api.post('/auth/register', {
+        username: formData.username,
+        password: formData.password
       });
-      
-      toast.success("Registration successful! Please log in.");
-      navigate('/login');
+     
+      setRegistrationSuccess(true);
+      toast.success("Registration submitted successfully! Your account will be reviewed by an administrator.");
     } catch (error) {
       console.error("Registration error:", error);
       toast.error(error.response?.data?.error || "Registration failed. Please try again.");
@@ -46,6 +46,36 @@ const Register = () => {
       setIsLoading(false);
     }
   };
+
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow text-center">
+          <div className="bg-green-100 rounded-full mx-auto p-3 w-16 h-16 flex items-center justify-center">
+            <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          
+          <h2 className="text-2xl font-bold text-gray-900">Registration Successful!</h2>
+          
+          <p className="text-gray-600">
+            Your account has been submitted for approval. An administrator will review your request.
+            You will be able to log in once your account is approved.
+          </p>
+          
+          <div className="mt-6">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Return to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div 

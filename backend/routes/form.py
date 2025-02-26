@@ -16,6 +16,12 @@ def generate_520b():
         
         pdf_handler = HTMLToPDFHandler()
         output_path = pdf_handler.generate_520b_pdf(data)
+
+        from ..utils.audit_logger import log_activity
+        log_activity(
+            action="Generate Form",
+            details=f"Generated 520B form for item {data.get('Item No', 'unknown')}"
+        )
         
         if output_path and output_path.exists():
             return send_file(
@@ -44,6 +50,13 @@ def generate_501a():
         
         pdf_handler = HTMLToPDFHandler()
         output_path = pdf_handler.generate_501a_pdf(data)
+
+        # Log this activity
+        from ..utils.audit_logger import log_activity
+        log_activity(
+            action="Generate Form",
+            details=f"Generated 501A form for receiving {data.get('receiving_no', 'unknown')}"
+        )
         
         if output_path and output_path.exists():
             return send_file(
@@ -73,6 +86,13 @@ def generate_519a():
         
         pdf_handler = HTMLToPDFHandler()
         output_path = pdf_handler.generate_519a_pdf(data)
+
+        # Log this activity
+        from ..utils.audit_logger import log_activity
+        log_activity(
+            action="Generate Form",
+            details=f"Generated 519A form for receiving {data.get('receiving_no', 'unknown')}"
+        )
         
         if output_path and output_path.exists():
             return send_file(
@@ -88,9 +108,6 @@ def generate_519a():
             
     except Exception as e:
         print(f"Error in route: {str(e)}")
-        # print(f"Full error: {e.__class__.__name__}: {str(e)}")  # More detailed error
-        # import traceback
-        # traceback.print_exc()  # Print full stack trace
         return jsonify({
             'error': str(e)
         }), 500

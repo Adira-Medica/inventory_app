@@ -4,11 +4,13 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from ..models import ReceivingData, ItemNumber
 from ..extensions import db
+from ..utils.role_checker import role_required
 
 bp = Blueprint('receiving', __name__, url_prefix='/api/receiving')
 
 @bp.route('/create', methods=['POST'])
 @jwt_required()
+@role_required(['admin', 'manager'])
 def create_receiving():
     try:
     
@@ -69,6 +71,7 @@ def get_receiving_numbers():
 
 @bp.route('/update/<int:id>', methods=['PUT'])
 @jwt_required()
+@role_required(['admin', 'manager'])
 def update_receiving(id):
     try:
         receiving = ReceivingData.query.get_or_404(id)
@@ -115,6 +118,7 @@ def get_receiving_detail(receiving_no):
 
 @bp.route('/toggle-obsolete/<int:id>', methods=['PUT'])
 @jwt_required()
+@role_required(['admin', 'manager'])
 def toggle_receiving_obsolete(id):
     try:
         receiving = ReceivingData.query.get_or_404(id)
