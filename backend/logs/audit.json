@@ -87,5 +87,113 @@
         "action": "Logout",
         "details": "User logged out",
         "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740584845.508826,
+        "timestamp": "2025-02-26T10:47:25.508826",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740584868.994971,
+        "timestamp": "2025-02-26T10:47:48.994971",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740584877.76761,
+        "timestamp": "2025-02-26T10:47:57.767610",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740584883.99806,
+        "timestamp": "2025-02-26T10:48:03.998060",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740584908.209071,
+        "timestamp": "2025-02-26T10:48:28.209071",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740585501.674628,
+        "timestamp": "2025-02-26T10:58:21.674628",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740585560.249177,
+        "timestamp": "2025-02-26T10:59:20.249177",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740586068.33047,
+        "timestamp": "2025-02-26T11:07:48.330470",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740586078.342481,
+        "timestamp": "2025-02-26T11:07:58.342481",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740586087.684544,
+        "timestamp": "2025-02-26T11:08:07.684544",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740586097.819806,
+        "timestamp": "2025-02-26T11:08:17.819806",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740586129.68179,
+        "timestamp": "2025-02-26T11:08:49.681790",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
     }
 ]

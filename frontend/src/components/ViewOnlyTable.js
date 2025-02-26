@@ -1,22 +1,39 @@
 // src/components/ViewOnlyTable.js
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../api/axios';
 import SearchBar from './common/SearchBar';
+import { useAuth } from '../hooks/useAuth';
 
 const ITEMS_PER_PAGE = 10;
 
 const ViewOnlyTable = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const [itemData, setItemData] = useState([]);
   const [receivingData, setReceivingData] = useState([]);
   const [activeTab, setActiveTab] = useState('items');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredData, setFilteredData] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchError, setSearchError] = useState('');
+
+  // If the user is a manager or admin, redirect them to the edit table
+  useEffect(() => {
+    if (!user) {
+      return; // Wait for user data to load
+    }
+    
+    if (user.role !== 'user') {
+      navigate('/landing', { replace: true });
+      toast.error('Unauthorized access. Redirecting to dashboard.');
+    }
+  }, [user, navigate]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -342,6 +359,7 @@ const ViewOnlyTable = () => {
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">View Data</h1>
           <div className="flex space-x-4">
             <button
               onClick={() => {

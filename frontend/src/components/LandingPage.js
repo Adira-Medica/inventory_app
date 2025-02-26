@@ -30,14 +30,14 @@ const LandingPage = () => {
 
   // Define cards based on user role
   let cards = [
-    {
-      title: "View Data",
-      description: "View inventory items and receiving data",
-      icon: EyeIcon, // Make sure to import this
-      path: "/view-data",
-      color: "bg-teal-500",
-      minRole: "user" // All roles can access this
-    },
+    // {
+    //   title: "View Data",
+    //   description: "View inventory items and receiving data",
+    //   icon: EyeIcon, // Make sure to import this
+    //   path: "/view-data",
+    //   color: "bg-teal-500",
+    //   minRole: "user" // All roles can access this
+    // },
     {
       title: "Form 520B",
       description: "Generate and manage 520B forms",
@@ -64,27 +64,31 @@ const LandingPage = () => {
     }
   ];
 
-  // Add manager-specific cards
-  if (user?.role === 'manager' || user?.role === 'admin') {
-    cards = [
-      ...cards,
-      {
-        title: "Add Data",
-        description: "Add new items or receiving data",
-        icon: PlusCircleIcon,
-        path: "/add-data",
-        color: "bg-emerald-500",
-        minRole: "manager"
-      },
-      {
-        title: "Data Management",
-        description: "Manage inventory items and receiving data",
-        icon: ClipboardDocumentListIcon,
-        path: "/edit-data",
-        color: "bg-blue-500",
-        minRole: "manager"
-      },
-    ];
+  // Add role-specific cards
+  if (user?.role === 'user') {
+    cards.push({
+      title: "View Data",
+      description: "View inventory items and receiving data",
+      icon: EyeIcon,
+      path: "/view-data",
+      color: "bg-teal-500"
+    });
+  } else if (user?.role === 'manager' || user?.role === 'admin') {
+    cards.push({
+      title: "Add Data",
+      description: "Add new items or receiving data",
+      icon: PlusCircleIcon,
+      path: "/add-data",
+      color: "bg-emerald-500"
+    });
+    
+    cards.push({
+      title: "Data Management",
+      description: "Manage inventory items and receiving data",
+      icon: ClipboardDocumentListIcon,
+      path: "/edit-data",
+      color: "bg-blue-500"
+    });
   }
 
   // Add admin-specific card
@@ -94,8 +98,7 @@ const LandingPage = () => {
       description: "Manage users, system settings and view logs",
       icon: CogIcon,
       path: "/admin",
-      color: "bg-red-500",
-      minRole: "admin"
+      color: "bg-red-500"
     });
   }
 

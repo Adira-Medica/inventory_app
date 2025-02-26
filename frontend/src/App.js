@@ -41,9 +41,9 @@ function App() {
         <Route
           path="/view-data"
           element={
-            <PrivateRoute>
+            <RoleProtectedRoute allowedRoles={['user']}>
               <ViewOnlyTable />
-            </PrivateRoute>
+            </RoleProtectedRoute>
           }
         />
         <Route
