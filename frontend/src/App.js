@@ -15,6 +15,7 @@ import Form519A from './components/forms/Form519A';
 import AdminDashboard from './components/admin/AdminDashboard';
 import PrivateRoute from './components/common/PrivateRoute';
 import RoleProtectedRoute from './components/common/RoleProtectedRoute';
+import ViewOnlyTable from './components/ViewOnlyTable';
 
 function App() {
   return (
@@ -34,6 +35,14 @@ function App() {
           element={
             <PrivateRoute>
               <LandingPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/view-data"
+          element={
+            <PrivateRoute>
+              <ViewOnlyTable />
             </PrivateRoute>
           }
         />

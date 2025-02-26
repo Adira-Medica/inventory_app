@@ -9,7 +9,8 @@ import {
   PlusCircleIcon,
   DocumentDuplicateIcon,
   ArrowRightOnRectangleIcon,
-  CogIcon
+  CogIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 
@@ -29,6 +30,14 @@ const LandingPage = () => {
 
   // Define cards based on user role
   let cards = [
+    {
+      title: "View Data",
+      description: "View inventory items and receiving data",
+      icon: EyeIcon, // Make sure to import this
+      path: "/view-data",
+      color: "bg-teal-500",
+      minRole: "user" // All roles can access this
+    },
     {
       title: "Form 520B",
       description: "Generate and manage 520B forms",
