@@ -1,6 +1,8 @@
 // src/components/admin/AdminDashboard.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useAuth } from '../../hooks/useAuth';
 import UserManagement from './UserManagement';
 import SystemSettings from './SystemSettings';
 import AuditLogs from './AuditLogs';
@@ -8,11 +10,23 @@ import AuditLogs from './AuditLogs';
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
   const navigate = useNavigate();
+  const { user } = useAuth();
   
+  // Extra security check - ensure only admin can access this page
+  useEffect(() => {
+    if (!user) {
+      return; // Wait for user data to load
+    }
+    
+    if (user.role !== 'admin') {
+      navigate('/landing', { replace: true });
+      toast.error('Unauthorized access. Only admins can access this page.');
+    }
+  }, [user, navigate]);
+
   const handleBack = () => {
     navigate('/landing');
   };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -26,7 +40,6 @@ const AdminDashboard = () => {
           </button>
         </div>
       </header>
-
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           {/* Tab Navigation */}
@@ -64,7 +77,6 @@ const AdminDashboard = () => {
               </button>
             </nav>
           </div>
-
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'users' && <UserManagement />}

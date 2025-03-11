@@ -1,4 +1,5 @@
 # backend/routes/auth.py
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from ..models import Role, User
@@ -72,31 +73,49 @@ def login():
 def register():
     try:
         data = request.get_json()
+        print(f"Registration request for: {data.get('username')}")
+        
         if User.query.filter_by(username=data['username']).first():
+            print(f"Username already exists: {data.get('username')}")
             return jsonify({'error': 'Username already exists'}), 400
        
         # Get the role object - default to 'user' role
         role_name = data.get('role', 'user')
         role = Role.query.filter_by(name=role_name).first()
         if not role:
+            print(f"Invalid role requested: {role_name}")
             return jsonify({'error': 'Invalid role'}), 400
            
-        # Create user with pending status
+        # Set initial status - default to 'pending' unless specified
+        status = data.get('status', 'pending')
+        print(f"Setting user status to: {status}")
+        
+        # Active by default only if admin-created and approved
+        active = True if status == 'approved' else False
+        print(f"Setting user active status to: {active}")
+        
+        # Create user
         user = User(
             username=data['username'],
             role_id=role.id,
-            status='pending'  # Set initial status to pending
+            status=status,
+            active=active,
+            registration_date=datetime.utcnow()
         )
         user.set_password(data['password'])
         db.session.add(user)
         db.session.commit()
-       
+        
+        print(f"User {user.username} registered with status: {status}, ID: {user.id}")
         return jsonify({
-            'message': 'Registration successful! Your account is pending admin approval.',
-            'status': 'pending'
+            'message': 'Registration successful! ' + 
+                      ('Account is ready to use.' if status == 'approved' else 'Your account is pending admin approval.'),
+            'status': status,
+            'id': user.id
         }), 201
     except Exception as e:
         db.session.rollback()
+        print(f"Error in registration: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # backend/routes/auth.py - Ensure this endpoint exists and works correctly

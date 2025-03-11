@@ -30,7 +30,7 @@ def check_description():
 # backend/routes/item.py
 @bp.route('/create', methods=['POST'])
 @jwt_required()
-@role_required(['admin', 'manager'])  # Only admin and manager can create items
+@role_required(['admin'])  # Only admin can create items
 def create_item():
     try:
         current_user = get_jwt_identity()
@@ -103,7 +103,7 @@ def get_items():
 
 @bp.route('/update/<int:id>', methods=['PUT'])
 @jwt_required()
-@role_required(['admin', 'manager'])
+@role_required(['admin'])
 def update_item(id):
     try:
         item = ItemNumber.query.get_or_404(id)
@@ -135,7 +135,7 @@ def update_item(id):
 
 @bp.route('/delete/<int:id>', methods=['DELETE'])
 @jwt_required()
-@role_required(['admin', 'manager'])
+@role_required(['admin'])
 def delete_item(id):
     item = ItemNumber.query.get_or_404(id)
     db.session.delete(item)
@@ -186,7 +186,7 @@ def get_item_detail(item_number):
 
 @bp.route('/toggle-obsolete/<int:id>', methods=['PUT'])
 @jwt_required()
-@role_required(['admin', 'manager'])
+@role_required(['admin'])
 def toggle_item_obsolete(id):
     try:
         item = ItemNumber.query.get_or_404(id)

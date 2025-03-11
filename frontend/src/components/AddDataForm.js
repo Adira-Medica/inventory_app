@@ -14,6 +14,7 @@ import {
 } from '../constants/formOptions';
 import Button from './common/Button';
 import FormInput from './common/FormInput';
+import BackButton from './common/BackButton';
 
 const AddDataForm = () => {
   const [activeTab, setActiveTab] = useState('items');
@@ -59,7 +60,6 @@ const AddDataForm = () => {
   const fetchOptions = async () => {
     try {
       const response = await api.get('/item/numbers');
-
       const transformedItems = response.data.map(item => ({
           value: item.item_number,
           label: `${item.item_number} - ${item.description}`
@@ -113,14 +113,13 @@ const AddDataForm = () => {
 
   const handleItemSubmit = async (e) => {
     e.preventDefault();
-    
+   
     const validationErrors = validateItemData(itemData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       toast.error('Please fill in all required fields correctly');
       return;
     }
-
     if (itemData.description.length > 2) {
       const isDescriptionUnique = await checkDescription(itemData.description);
       if (!isDescriptionUnique) {
@@ -130,7 +129,6 @@ const AddDataForm = () => {
     }
 
     setIsSubmitting(true);
-
     try {
       await api.post('/item/create', itemData);
       toast.success('Item added successfully');
@@ -171,7 +169,6 @@ const AddDataForm = () => {
     }
 
     setIsSubmitting(true);
-
     try {
       await api.post('/receiving/create', receivingData);
       toast.success('Receiving data added successfully');
@@ -203,6 +200,11 @@ const AddDataForm = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Add Data</h2>
+          <BackButton />
+        </div>
+      
         <div className="flex justify-center space-x-4 mb-6">
           <motion.button
             whileHover={{ scale: 1.02 }}

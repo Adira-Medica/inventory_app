@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await api.post('/auth/login', credentials);
+      
       if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
         setUser({
@@ -57,31 +58,54 @@ export const AuthProvider = ({ children }) => {
           username: response.data.user.username,
           role: response.data.user.role
         });
-        return true;
+        return { success: true };
       }
+      return { success: false, message: 'Invalid response from server' };
     } catch (error) {
       console.error('Login error:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        const errorMessage = error.response.data.error;
+        
+        if (errorMessage.includes('pending admin approval')) {
+          return { 
+            success: false, 
+            status: 'pending', 
+            message: 'Your account is pending approval from an administrator. Please try again later.' 
+          };
+        } else if (errorMessage.includes('deactivated')) {
+          return { 
+            success: false, 
+            status: 'inactive', 
+            message: 'Your account has been deactivated. Please contact an administrator.' 
+          };
+        }
+      }
+      
       toast.error(error.response?.data?.error || 'Login failed');
-      return false;
+      return { 
+        success: false, 
+        message: error.response?.data?.error || 'Login failed. Please check your credentials.' 
+      };
     }
   };
   
   // Logout function
-  // src/context/AuthContext.js - Update the logout function
-const logout = async () => {
-  try {
-    // Call the backend logout endpoint
-    await api.post('/auth/logout');
-    console.log('Logged out on server');
-  } catch (error) {
-    console.error('Error logging out on server:', error);
-    // Continue with logout even if the server request fails
-  } finally {
-    // Remove token and user data from local storage
-    localStorage.removeItem('token');
-    setUser(null);
-  }
-};
+  const logout = async () => {
+    try {
+      // Call the backend logout endpoint
+      await api.post('/auth/logout');
+      console.log('Logged out on server');
+    } catch (error) {
+      console.error('Error logging out on server:', error);
+      // Continue with logout even if the server request fails
+    } finally {
+      // Remove token and user data from local storage
+      localStorage.removeItem('token');
+      setUser(null);
+    }
+  };
 
   const value = {
     user,

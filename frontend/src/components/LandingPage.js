@@ -24,43 +24,40 @@ const LandingPage = () => {
     toast.success('Logged out successfully');
   };
 
-  const handleCardClick = (path) => {
-    navigate(path);
+  const handleCardClick = (path, e) => {
+    // Check if ctrl/cmd key was pressed or if it was a middle mouse button click
+    if (e.ctrlKey || e.metaKey || e.button === 1) {
+      // Open in new tab
+      window.open(path, '_blank');
+      e.stopPropagation(); // Prevent other handlers from firing
+    } else {
+      // Normal navigation
+      navigate(path);
+    }
   };
 
   // Define cards based on user role
   let cards = [
-    // {
-    //   title: "View Data",
-    //   description: "View inventory items and receiving data",
-    //   icon: EyeIcon, // Make sure to import this
-    //   path: "/view-data",
-    //   color: "bg-teal-500",
-    //   minRole: "user" // All roles can access this
-    // },
     {
       title: "Form 520B",
       description: "Generate and manage 520B forms",
       icon: DocumentTextIcon,
       path: "/forms/520b",
-      color: "bg-purple-500",
-      minRole: "user" // All roles can access this
+      color: "bg-purple-500"
     },
     {
       title: "Form 501A",
       description: "Generate and manage 501A forms",
       icon: DocumentDuplicateIcon,
       path: "/forms/501a",
-      color: "bg-indigo-500",
-      minRole: "user" // All roles can access this
+      color: "bg-indigo-500"
     },
     {
       title: "Form 519A",
       description: "Generate and manage 519A forms",
       icon: DocumentTextIcon,
       path: "/forms/519a",
-      color: "bg-pink-500",
-      minRole: "user" // All roles can access this
+      color: "bg-pink-500"
     }
   ];
 
@@ -73,7 +70,31 @@ const LandingPage = () => {
       path: "/view-data",
       color: "bg-teal-500"
     });
-  } else if (user?.role === 'manager' || user?.role === 'admin') {
+  } else if (user?.role === 'manager') {
+    cards.push({
+      title: "View Items",
+      description: "View inventory items",
+      icon: EyeIcon,
+      path: "/view-items",
+      color: "bg-teal-500"
+    });
+    
+    cards.push({
+      title: "Add Receiving Data",
+      description: "Add new receiving data",
+      icon: PlusCircleIcon,
+      path: "/add-receiving",
+      color: "bg-emerald-500"
+    });
+    
+    cards.push({
+      title: "Data Management",
+      description: "Manage receiving data",
+      icon: ClipboardDocumentListIcon,
+      path: "/edit-data",
+      color: "bg-blue-500"
+    });
+  } else if (user?.role === 'admin') {
     cards.push({
       title: "Add Data",
       description: "Add new items or receiving data",
@@ -81,7 +102,7 @@ const LandingPage = () => {
       path: "/add-data",
       color: "bg-emerald-500"
     });
-    
+   
     cards.push({
       title: "Data Management",
       description: "Manage inventory items and receiving data",
@@ -170,6 +191,7 @@ const LandingPage = () => {
               </span>
             )}
           </div>
+
           <motion.button
             onClick={handleLogout}
             whileHover={{ scale: 1.05 }}
@@ -181,6 +203,7 @@ const LandingPage = () => {
           </motion.button>
         </div>
       </header>
+
       <div className="max-w-7xl mx-auto px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -205,6 +228,7 @@ const LandingPage = () => {
             Welcome, {user?.username}! Access the features below based on your role permissions.
           </motion.p>
         </motion.div>
+
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -217,10 +241,19 @@ const LandingPage = () => {
               variants={cardVariants}
               whileHover="hover"
               whileTap="tap"
-              className="cursor-pointer"
-              onClick={() => handleCardClick(card.path)}
+              className="cursor-pointer group"
+              onClick={(e) => handleCardClick(card.path, e)}
+              onAuxClick={(e) => {
+                if (e.button === 1) {
+                  handleCardClick(card.path, e);
+                }
+              }}
+              onContextMenu={(e) => {
+                // Right-click is handled by the browser for "Open in new tab"
+                // We don't need to prevent default here
+              }}
             >
-              <div className="relative bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="relative bg-white rounded-xl shadow-lg overflow-hidden h-full">
                 <div className={`${card.color} absolute top-0 left-0 w-2 h-full`} />
                 <div className="p-6">
                   <motion.div
@@ -235,6 +268,9 @@ const LandingPage = () => {
                   <p className="text-gray-600">
                     {card.description}
                   </p>
+                  <div className="absolute bottom-2 right-2 text-xs text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Ctrl+Click to open in new tab
+                  </div>
                 </div>
               </div>
             </motion.div>

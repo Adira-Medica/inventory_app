@@ -17,28 +17,63 @@ const UserManagement = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetchUsers();
     fetchPendingUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Add debug headers to all requests
+  useEffect(() => {
+    // Add request interceptor for debugging
+    const interceptor = api.interceptors.request.use(config => {
+      console.log(`Making ${config.method.toUpperCase()} request to: ${config.url}`);
+      return config;
+    }, error => {
+      console.error('Request error:', error);
+      return Promise.reject(error);
+    });
+
+    // Add response interceptor for debugging
+    const responseInterceptor = api.interceptors.response.use(response => {
+      console.log(`Response from ${response.config.url}:`, response.status);
+      return response;
+    }, error => {
+      console.error(`Response error from ${error.config?.url}:`, error.response?.status, error.response?.data);
+      return Promise.reject(error);
+    });
+
+    return () => {
+      // Clean up interceptors
+      api.interceptors.request.eject(interceptor);
+      api.interceptors.response.eject(responseInterceptor);
+    };
   }, []);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/auth/users');
+      console.log('Fetching all users...');
+      const response = await api.get('/admin/users');
+      console.log('Users response received:', response.data);
+      
       if (response.data && Array.isArray(response.data)) {
-        setUsers(response.data);
+        // Filter out any pending users from the main list
+        const approvedUsers = response.data.filter(user => 
+          !(user.status && user.status === 'pending')
+        );
+        console.log(`Found ${approvedUsers.length} approved users`);
+        setUsers(approvedUsers);
       } else {
-        // If we get an empty response or non-array, use sample data
+        console.warn('Response is not an array, using sample data');
         setUsers(getSampleUsers());
-        console.log('Using sample user data');
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
-      // Use sample data as fallback
-      setUsers(getSampleUsers());
+      console.error('Error fetching users:', error.response || error);
       toast.warning('Could not fetch users from server, using sample data');
+      setUsers(getSampleUsers());
     } finally {
       setLoading(false);
     }
@@ -47,14 +82,19 @@ const UserManagement = () => {
   const fetchPendingUsers = async () => {
     setPendingLoading(true);
     try {
+      console.log('Fetching pending users...');
       const response = await api.get('/admin/users/pending');
+      console.log('Pending users response received:', response.data);
+      
       if (response.data && Array.isArray(response.data)) {
+        console.log(`Found ${response.data.length} pending users`);
         setPendingUsers(response.data);
       } else {
+        console.warn('Pending users response is not an array');
         setPendingUsers([]);
       }
     } catch (error) {
-      console.error('Error fetching pending users:', error);
+      console.error('Error fetching pending users:', error.response || error);
       setPendingUsers([]);
     } finally {
       setPendingLoading(false);
@@ -63,24 +103,30 @@ const UserManagement = () => {
 
   const handleApproveUser = async (userId) => {
     try {
-      await api.put(`/admin/users/${userId}/approve`);
+      console.log(`Approving user with ID: ${userId}`);
+      const response = await api.put(`/admin/users/${userId}/approve`);
+      console.log('Approve response:', response.data);
+      
       toast.success('User approved successfully');
       fetchPendingUsers(); // Refresh pending users
-      fetchUsers(); // Refresh all users
+      fetchUsers(); // Refresh all users after approval
     } catch (error) {
-      toast.error('Failed to approve user');
-      console.error(error);
+      console.error('Error approving user:', error.response || error);
+      toast.error(`Failed to approve user: ${error.response?.data?.error || 'Unknown error'}`);
     }
   };
 
   const handleRejectUser = async (userId) => {
     try {
-      await api.put(`/admin/users/${userId}/reject`);
+      console.log(`Rejecting user with ID: ${userId}`);
+      const response = await api.put(`/admin/users/${userId}/reject`);
+      console.log('Reject response:', response.data);
+      
       toast.success('User registration rejected');
-      fetchPendingUsers(); // Refresh pending users
+      fetchPendingUsers(); // Refresh pending users list
     } catch (error) {
-      toast.error('Failed to reject user');
-      console.error(error);
+      console.error('Error rejecting user:', error.response || error);
+      toast.error(`Failed to reject user: ${error.response?.data?.error || 'Unknown error'}`);
     }
   };
 
@@ -130,6 +176,7 @@ const UserManagement = () => {
     });
     setIsEditing(false);
     setSelectedUser(null);
+    setShowPassword(false);
   };
 
   const handleAddNewClick = () => {
@@ -138,6 +185,7 @@ const UserManagement = () => {
   };
 
   const handleEditClick = (user) => {
+    console.log('Editing user:', user);
     setFormData({
       username: user.username,
       password: '', // Don't set password when editing
@@ -155,20 +203,25 @@ const UserManagement = () => {
     try {
       if (isEditing) {
         // Update existing user
-        await api.put(`/auth/users/${selectedUser.id}`, {
+        console.log(`Updating user ${selectedUser.id} with:`, formData);
+        const response = await api.put(`/admin/users/${selectedUser.id}`, {
           username: formData.username,
           role: formData.role,
           active: formData.active,
           ...(formData.password ? { password: formData.password } : {})
         });
+        console.log('Update response:', response.data);
         toast.success('User updated successfully');
       } else {
-        // Create new user
-        await api.post('/auth/register', {
+        // Create new user with approved status since it's created by admin
+        console.log('Creating new user with:', formData);
+        const response = await api.post('/auth/register', {
           username: formData.username,
           password: formData.password,
-          role: formData.role
+          role: formData.role,
+          status: 'approved' // Set as approved by default when created by admin
         });
+        console.log('Create response:', response.data);
         toast.success('User created successfully');
       }
       
@@ -176,19 +229,26 @@ const UserManagement = () => {
       setShowAddForm(false);
       fetchUsers(); // Refresh the user list
     } catch (error) {
+      console.error('Error saving user:', error.response || error);
       toast.error(error.response?.data?.error || 'Failed to save user');
-      console.error(error);
     }
   };
 
   const toggleUserStatus = async (user) => {
     try {
-      await api.put(`/auth/users/${user.id}/toggle-status`);
+      console.log(`Toggling status for user ${user.id} to ${!user.active}`);
+      
+      // Use the status update endpoint instead of toggle-status
+      const response = await api.put(`/admin/users/${user.id}/status`, {
+        is_active: !user.active
+      });
+      
+      console.log('Toggle status response:', response.data);
       toast.success(`User ${user.active ? 'deactivated' : 'activated'} successfully`);
       fetchUsers(); // Refresh the user list
     } catch (error) {
-      toast.error('Failed to update user status');
-      console.error(error);
+      console.error('Error updating user status:', error.response || error);
+      toast.error(`Failed to update user status: ${error.response?.data?.error || 'Unknown error'}`);
     }
   };
 
@@ -244,7 +304,7 @@ const UserManagement = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {new Date(user.registration_date).toLocaleDateString()}
+                        {user.registration_date ? new Date(user.registration_date).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
@@ -291,14 +351,33 @@ const UserManagement = () => {
               <label className="block text-sm font-medium text-gray-700">
                 Password {isEditing && "(leave blank to keep unchanged)"}
               </label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                required={!isEditing}
-              />
+              <div className="relative mt-1">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  required={!isEditing}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
+                      <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
             
             <div>

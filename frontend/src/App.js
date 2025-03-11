@@ -9,13 +9,14 @@ import Register from './components/Register';
 import LandingPage from './components/LandingPage';
 import AddDataForm from './components/AddDataForm';
 import EditDeleteTable from './components/EditDeleteTable';
+import AddReceivingOnly from './components/AddReceivingOnly';
 import Form520B from './components/forms/Form520B';
 import Form501A from './components/forms/Form501A';
 import Form519A from './components/forms/Form519A';
 import AdminDashboard from './components/admin/AdminDashboard';
+import ViewOnlyTable from './components/ViewOnlyTable';
 import PrivateRoute from './components/common/PrivateRoute';
 import RoleProtectedRoute from './components/common/RoleProtectedRoute';
-import ViewOnlyTable from './components/ViewOnlyTable';
 
 function App() {
   return (
@@ -36,14 +37,6 @@ function App() {
             <PrivateRoute>
               <LandingPage />
             </PrivateRoute>
-          }
-        />
-        <Route
-          path="/view-data"
-          element={
-            <RoleProtectedRoute allowedRoles={['user']}>
-              <ViewOnlyTable />
-            </RoleProtectedRoute>
           }
         />
         <Route
@@ -71,15 +64,47 @@ function App() {
           }
         />
        
-        {/* Protected routes for managers and admins */}
+        {/* User-only view data route */}
+        <Route
+          path="/view-data"
+          element={
+            <RoleProtectedRoute allowedRoles={['user']}>
+              <ViewOnlyTable />
+            </RoleProtectedRoute>
+          }
+        />
+       
+        {/* Admin-only route for adding both items and receiving data */}
         <Route
           path="/add-data"
           element={
-            <RoleProtectedRoute allowedRoles={['manager', 'admin']}>
+            <RoleProtectedRoute allowedRoles={['admin']}>
               <AddDataForm />
             </RoleProtectedRoute>
           }
         />
+        
+        {/* Manager-only routes for view-only item access */}
+        <Route
+          path="/view-items"
+          element={
+            <RoleProtectedRoute allowedRoles={['manager']}>
+              <ViewOnlyTable />
+            </RoleProtectedRoute>
+          }
+        />
+        
+        {/* Manager-only route for adding receiving data */}
+        <Route
+          path="/add-receiving"
+          element={
+            <RoleProtectedRoute allowedRoles={['manager']}>
+              <AddReceivingOnly />
+            </RoleProtectedRoute>
+          }
+        />
+        
+        {/* Manager and admin route for data management */}
         <Route
           path="/edit-data"
           element={

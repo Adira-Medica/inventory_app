@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import api from '../../api/axios';
 import SearchableSelect from '../common/SearchableSelect';
 import { format } from 'date-fns';
+import BackButton from "../common/BackButton";
 
 const Form519A = () => {
   const [formData, setFormData] = useState({
@@ -280,7 +281,7 @@ const Form519A = () => {
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <form className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-2xl font-bold text-center mb-6">Temperature Exposure Record (Form 519A)</h2>
-
+        <BackButton />
         <div className="space-y-6">
           {/* Basic Information Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

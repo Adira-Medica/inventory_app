@@ -4,13 +4,17 @@ import { toast } from 'react-toastify';
 import api from '../api/axios';
 import EditModal from './modals/EditModal';
 import SearchBar from './common/SearchBar';
+import BackButton from './common/BackButton';
+import { useAuth } from '../hooks/useAuth';
 
 const ITEMS_PER_PAGE = 10;
 
 const EditDeleteTable = () => {
+  const { user } = useAuth();
+  // For managers, default to receiving tab and don't allow switching to items
+  const [activeTab, setActiveTab] = useState(user?.role === 'manager' ? 'receiving' : 'items');
   const [itemData, setItemData] = useState([]);
   const [receivingData, setReceivingData] = useState([]);
-  const [activeTab, setActiveTab] = useState('items');
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -61,10 +65,10 @@ const EditDeleteTable = () => {
   }, [fetchData, activeTab]);
 
   const handleResultSelect = useCallback((result) => {
-    const elementId = activeTab === 'items' ? 
-      `item-${result.id}` : 
+    const elementId = activeTab === 'items' ?
+      `item-${result.id}` :
       `receiving-${result.id}`;
-      
+     
     const element = document.getElementById(elementId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -80,11 +84,10 @@ const EditDeleteTable = () => {
 
   const handleKeyDown = useCallback((e) => {
     if (!isSearchOpen) return;
-
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev < filteredData.length - 1 ? prev + 1 : prev
         );
         break;
@@ -143,12 +146,18 @@ const EditDeleteTable = () => {
 
   const handleObsolete = useCallback(async (id) => {
     try {
+      // For managers, prevent obsoleting item data
+      if (user?.role === 'manager' && activeTab === 'items') {
+        toast.error('Managers cannot modify item data');
+        return;
+      }
+      
       const endpoint = activeTab === 'items'
         ? `/item/toggle-obsolete/${id}`
         : `/receiving/toggle-obsolete/${id}`;
-      
+     
       await api.put(endpoint);
-      
+     
       if (activeTab === 'items') {
         setItemData(prevData =>
           prevData.map(item =>
@@ -186,20 +195,25 @@ const EditDeleteTable = () => {
       console.error('Error updating obsolete status:', error);
       toast.error('Failed to update obsolete status');
     }
-  }, [activeTab]);
+  }, [activeTab, user?.role]);
 
   const handleEdit = useCallback((id, type) => {
+    // For managers, prevent editing item data
+    if (user?.role === 'manager' && type === 'items') {
+      toast.error('Managers cannot edit item data');
+      return;
+    }
+    
     const data = type === 'items'
       ? itemData.find(item => item.id === id)
       : receivingData.find(item => item.id === id);
-    
+   
     setEditingData({ ...data, type });
     setEditModalOpen(true);
-  }, [itemData, receivingData]);
+  }, [itemData, receivingData, user?.role]);
 
   const handleUpdate = useCallback((updatedData) => {
     if (!updatedData?.id) return;
-
     if (activeTab === 'items') {
       setItemData(prevData =>
         prevData.map(item =>
@@ -227,12 +241,12 @@ const EditDeleteTable = () => {
 
   const getCurrentData = useCallback(() => {
     if (!filteredData?.length) return [];
-    
+   
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const sortedData = [...filteredData].sort((a, b) => 
+    const sortedData = [...filteredData].sort((a, b) =>
       (a.display_order || 0) - (b.display_order || 0)
     );
-    
+   
     return sortedData.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredData, currentPage]);
 
@@ -292,7 +306,7 @@ const EditDeleteTable = () => {
               // In the middle
               pageNum = currentPage - 2 + index;
             }
-            
+           
             return (
               <button
                 key={pageNum}
@@ -328,7 +342,6 @@ const EditDeleteTable = () => {
     if (!data?.length) {
       return <div className="p-4 text-center text-gray-500">No items found</div>;
     }
-
     return (
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
@@ -360,8 +373,8 @@ const EditDeleteTable = () => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((item) => (
-            <tr 
-              key={item.id} 
+            <tr
+              key={item.id}
               id={`item-${item.id}`}
               className={`transition-colors duration-200 ${item.is_obsolete ? 'bg-red-100' : ''}`}
             >
@@ -382,26 +395,29 @@ const EditDeleteTable = () => {
               <td className="px-6 py-4 whitespace-nowrap">{item.sequential_numbers}</td>
               <td className="px-6 py-4 whitespace-nowrap">{item.study_type}</td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <TableActions
-                  id={item.id}
-                  onEdit={(id) => handleEdit(id, 'items')}
-                  isObsolete={item.is_obsolete}
-                  onObsolete={handleObsolete}
-                />
+                {user?.role === 'admin' ? (
+                  <TableActions
+                    id={item.id}
+                    onEdit={(id) => handleEdit(id, 'items')}
+                    isObsolete={item.is_obsolete}
+                    onObsolete={handleObsolete}
+                  />
+                ) : (
+                  <span className="text-gray-500">View Only</span>
+                )}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
     );
-  }, [getCurrentData, handleEdit, handleObsolete]);
+  }, [getCurrentData, handleEdit, handleObsolete, user?.role]);
 
   const ReceivingTable = useCallback(() => {
     const data = getCurrentData();
     if (!data?.length) {
       return <div className="p-4 text-center text-gray-500">No receiving data found</div>;
     }
-
     return (
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
@@ -432,7 +448,7 @@ const EditDeleteTable = () => {
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
           {data.map((receiving) => (
-            <tr 
+            <tr
               key={receiving.id}
               id={`receiving-${receiving.id}`}
               className={`transition-colors duration-200 ${receiving.is_obsolete ? 'bg-red-100' : ''}`}
@@ -471,37 +487,47 @@ const EditDeleteTable = () => {
     <div className="min-h-screen bg-gray-100 py-8">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Data Management</h1>
           <div className="flex space-x-4">
-            <button
-              onClick={() => {
-                setActiveTab('items');
-                setCurrentPage(1);
-                setSearchTerm('');
-                setIsSearchOpen(false);
-              }}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'items'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Item Data
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('receiving');
-                setCurrentPage(1);
-                setSearchTerm('');
-                setIsSearchOpen(false);
-              }}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'receiving'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Receiving Data
-            </button>
+            {user?.role === 'admin' ? (
+              <>
+                <button
+                  onClick={() => {
+                    setActiveTab('items');
+                    setCurrentPage(1);
+                    setSearchTerm('');
+                    setIsSearchOpen(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg ${
+                    activeTab === 'items'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Item Data
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('receiving');
+                    setCurrentPage(1);
+                    setSearchTerm('');
+                    setIsSearchOpen(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg ${
+                    activeTab === 'receiving'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Receiving Data
+                </button>
+              </>
+            ) : (
+              <h2 className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                Receiving Data
+              </h2>
+            )}
+            <BackButton />
           </div>
         </div>
 
@@ -541,7 +567,6 @@ const EditDeleteTable = () => {
                 {filteredData.length > 0 && <PaginationControls />}
               </>
             )}
-
             {editModalOpen && (
               <EditModal
                 isOpen={editModalOpen}

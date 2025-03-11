@@ -20,6 +20,7 @@ def get_users():
         print("Fetching all users for admin dashboard")
         # Get all users with their roles
         users = User.query.all()
+        print(f"Found {len(users)} users in database")
         users_data = []
         
         for user in users:
@@ -90,7 +91,10 @@ def update_user(id):
 @role_required(['admin'])
 def toggle_user_status(id):
     try:
+        print(f"Toggle status request received for user ID: {id}")
         user = User.query.get_or_404(id)
+        
+        # Toggle the active status
         user.active = not user.active
         db.session.commit()
         
@@ -101,12 +105,14 @@ def toggle_user_status(id):
             details=f"{action_type}d user: {user.username}"
         )
         
+        print(f"User {user.username} status toggled to: {user.active}")
         return jsonify({
             'message': f'User {"activated" if user.active else "deactivated"} successfully',
             'active': user.active
         }), 200
     except Exception as e:
         db.session.rollback()
+        print(f"Error toggling user status: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/users/pending', methods=['GET'])
@@ -134,8 +140,12 @@ def get_pending_users():
 @role_required(['admin'])
 def approve_user(id):
     try:
+        print(f"Approving user ID: {id}")
         user = User.query.get_or_404(id)
+        
+        # Set status to approved and activate the user
         user.status = 'approved'
+        user.active = True
         db.session.commit()
         
         # Log this action
@@ -144,16 +154,19 @@ def approve_user(id):
             details=f"Approved user registration: {user.username}"
         )
         
+        print(f"User {user.username} approved successfully")
         return jsonify({
             'message': 'User approved successfully',
             'user': {
                 'id': user.id,
                 'username': user.username,
-                'status': user.status
+                'status': user.status,
+                'active': user.active
             }
         }), 200
     except Exception as e:
         db.session.rollback()
+        print(f"Error approving user: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @bp.route('/users/<int:id>/reject', methods=['PUT'])
@@ -161,8 +174,12 @@ def approve_user(id):
 @role_required(['admin'])
 def reject_user(id):
     try:
+        print(f"Rejecting user ID: {id}")
         user = User.query.get_or_404(id)
+        
+        # Set status to rejected and deactivate the user
         user.status = 'rejected'
+        user.active = False
         db.session.commit()
         
         # Log this action
@@ -171,16 +188,19 @@ def reject_user(id):
             details=f"Rejected user registration: {user.username}"
         )
         
+        print(f"User {user.username} rejected successfully")
         return jsonify({
             'message': 'User registration rejected',
             'user': {
                 'id': user.id,
                 'username': user.username,
-                'status': user.status
+                'status': user.status,
+                'active': user.active
             }
         }), 200
     except Exception as e:
         db.session.rollback()
+        print(f"Error rejecting user: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # System Settings Endpoints
@@ -454,4 +474,39 @@ def clear_audit_logs():
         else:
             return jsonify({'message': 'No audit logs found to clear'}), 200
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@bp.route('/users/<int:id>/status', methods=['PUT'])
+@jwt_required()
+@role_required(['admin'])
+def update_user_status(id):
+    try:
+        print(f"Updating status for user ID: {id}")
+        user = User.query.get_or_404(id)
+        data = request.get_json()
+        
+        print(f"Received data: {data}")
+        if 'is_active' not in data:
+            print("Missing is_active field")
+            return jsonify({'error': 'is_active field is required'}), 400
+        
+        # Update user's active status
+        user.active = data['is_active']
+        db.session.commit()
+        
+        # Log this action
+        action_type = 'Activate' if user.active else 'Deactivate'
+        log_activity(
+            action=action_type, 
+            details=f"{action_type}d user: {user.username}"
+        )
+        
+        print(f"User status updated to: {user.active}")
+        return jsonify({
+            'message': f'User {"activated" if user.active else "deactivated"} successfully',
+            'active': user.active
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating user status: {str(e)}")
         return jsonify({'error': str(e)}), 500

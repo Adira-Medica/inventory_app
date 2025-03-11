@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 
 const RoleProtectedRoute = ({ allowedRoles, children }) => {
   const { user, loading } = useAuth();
-
   // Show loading state
   if (loading) {
     return (
@@ -15,19 +14,16 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
       </div>
     );
   }
-
   // Check if user is authenticated
   if (!user) {
     toast.error('Please log in to access this page');
     return <Navigate to="/login" replace />;
   }
-
   // Check if user has required role
-  if (!allowedRoles.includes(user.role)) {
-    toast.error(`Unauthorized: Your role (${user.role}) doesn't have access to this feature`);
+  if (!user.role || !allowedRoles.includes(user.role)) {
+    toast.error(`Unauthorized: Your role (${user.role || 'unknown'}) doesn't have access to this feature`);
     return <Navigate to="/landing" replace />;
   }
-
   // User is authenticated and has the required role
   return children;
 };

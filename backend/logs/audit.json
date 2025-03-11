@@ -195,5 +195,572 @@
         "action": "Logout",
         "details": "User logged out",
         "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740613681.362757,
+        "timestamp": "2025-02-26T18:48:01.362757",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740613713.409136,
+        "timestamp": "2025-02-26T18:48:33.409136",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740613722.283332,
+        "timestamp": "2025-02-26T18:48:42.283332",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740613742.299319,
+        "timestamp": "2025-02-26T18:49:02.299319",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Update",
+        "details": "Updated system settings",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740613773.107391,
+        "timestamp": "2025-02-26T18:49:33.107391",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740627032.757298,
+        "timestamp": "2025-02-26T22:30:32.757298",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740627920.925716,
+        "timestamp": "2025-02-26T22:45:20.925716",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740627927.457809,
+        "timestamp": "2025-02-26T22:45:27.457809",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740627937.149924,
+        "timestamp": "2025-02-26T22:45:37.149924",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740628049.401166,
+        "timestamp": "2025-02-26T22:47:29.401166",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740628261.587161,
+        "timestamp": "2025-02-26T22:51:01.587161",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740628267.793116,
+        "timestamp": "2025-02-26T22:51:07.793116",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740628278.48105,
+        "timestamp": "2025-02-26T22:51:18.481050",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740847672.882494,
+        "timestamp": "2025-03-01T11:47:52.882494",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740847711.822144,
+        "timestamp": "2025-03-01T11:48:31.822144",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740872985.909578,
+        "timestamp": "2025-03-01T18:49:45.909578",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873014.188675,
+        "timestamp": "2025-03-01T18:50:14.188675",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873215.402891,
+        "timestamp": "2025-03-01T18:53:35.402891",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873297.252372,
+        "timestamp": "2025-03-01T18:54:57.252372",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Generate Form",
+        "details": "Generated 501A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873323.594003,
+        "timestamp": "2025-03-01T18:55:23.594003",
+        "username": "Gowtham",
+        "user_id": 2,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873330.05671,
+        "timestamp": "2025-03-01T18:55:30.056710",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873373.5659,
+        "timestamp": "2025-03-01T18:56:13.565900",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Obsolete",
+        "details": "Obsoleted item: D100001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873383.874233,
+        "timestamp": "2025-03-01T18:56:23.874233",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873392.130773,
+        "timestamp": "2025-03-01T18:56:32.130773",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873438.404614,
+        "timestamp": "2025-03-01T18:57:18.404614",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Update",
+        "details": "Updated system settings",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873485.027184,
+        "timestamp": "2025-03-01T18:58:05.027184",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873548.906773,
+        "timestamp": "2025-03-01T18:59:08.906773",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873565.870731,
+        "timestamp": "2025-03-01T18:59:25.870731",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Approve",
+        "details": "Approved user registration: vrg",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873579.16223,
+        "timestamp": "2025-03-01T18:59:39.162230",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873585.41856,
+        "timestamp": "2025-03-01T18:59:45.418560",
+        "username": "vrg",
+        "user_id": 5,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740873589.857802,
+        "timestamp": "2025-03-01T18:59:49.857802",
+        "username": "vrg",
+        "user_id": 5,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740874585.169727,
+        "timestamp": "2025-03-01T19:16:25.169727",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740874588.658467,
+        "timestamp": "2025-03-01T19:16:28.658467",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Reject",
+        "details": "Rejected user registration: goveera",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740874596.900197,
+        "timestamp": "2025-03-01T19:16:36.900197",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740874601.192521,
+        "timestamp": "2025-03-01T19:16:41.192521",
+        "username": "goveera",
+        "user_id": 6,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740874622.284353,
+        "timestamp": "2025-03-01T19:17:02.284353",
+        "username": "goveera",
+        "user_id": 6,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740874626.090983,
+        "timestamp": "2025-03-01T19:17:06.090983",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740878157.580218,
+        "timestamp": "2025-03-01T20:15:57.580218",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740878167.451291,
+        "timestamp": "2025-03-01T20:16:07.451291",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740878183.508388,
+        "timestamp": "2025-03-01T20:16:23.508388",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740878186.644914,
+        "timestamp": "2025-03-01T20:16:26.644914",
+        "username": "vrg",
+        "user_id": 5,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740889021.100579,
+        "timestamp": "2025-03-01T23:17:01.100579",
+        "username": "vrg",
+        "user_id": 5,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740889300.032071,
+        "timestamp": "2025-03-01T23:21:40.032071",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740889575.925502,
+        "timestamp": "2025-03-01T23:26:15.925502",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740889585.694489,
+        "timestamp": "2025-03-01T23:26:25.694489",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740889597.830868,
+        "timestamp": "2025-03-01T23:26:37.830868",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740889872.553696,
+        "timestamp": "2025-03-01T23:31:12.553696",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740890577.081214,
+        "timestamp": "2025-03-01T23:42:57.081214",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740890585.049935,
+        "timestamp": "2025-03-01T23:43:05.049935",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740890592.470366,
+        "timestamp": "2025-03-01T23:43:12.470366",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740890596.909481,
+        "timestamp": "2025-03-01T23:43:16.909481",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740890954.126961,
+        "timestamp": "2025-03-01T23:49:14.126961",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740891116.91399,
+        "timestamp": "2025-03-01T23:51:56.913990",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Update",
+        "details": "Updated user: goveera",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740891126.779499,
+        "timestamp": "2025-03-01T23:52:06.779499",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740891199.33656,
+        "timestamp": "2025-03-01T23:53:19.336560",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740891206.816139,
+        "timestamp": "2025-03-01T23:53:26.816139",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Approve",
+        "details": "Approved user registration: raja",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1740891209.953596,
+        "timestamp": "2025-03-01T23:53:29.953596",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Activate",
+        "details": "Activated user: goveera",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741721203.143701,
+        "timestamp": "2025-03-11T15:26:43.143701",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741721246.884104,
+        "timestamp": "2025-03-11T15:27:26.884104",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741721263.226705,
+        "timestamp": "2025-03-11T15:27:43.226705",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741721282.243709,
+        "timestamp": "2025-03-11T15:28:02.243709",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741721973.802868,
+        "timestamp": "2025-03-11T15:39:33.802868",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741721999.286433,
+        "timestamp": "2025-03-11T15:39:59.286433",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
     }
 ]

@@ -11,7 +11,7 @@ const ITEMS_PER_PAGE = 10;
 const ViewOnlyTable = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   const [itemData, setItemData] = useState([]);
   const [receivingData, setReceivingData] = useState([]);
   const [activeTab, setActiveTab] = useState('items');
@@ -23,15 +23,20 @@ const ViewOnlyTable = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchError, setSearchError] = useState('');
 
-  // If the user is a manager or admin, redirect them to the edit table
+  // Ensure only users with "user" role or managers on item tab can access this page
   useEffect(() => {
     if (!user) {
       return; // Wait for user data to load
     }
-    
-    if (user.role !== 'user') {
+   
+    if (user.role !== 'user' && user.role !== 'manager') {
       navigate('/landing', { replace: true });
       toast.error('Unauthorized access. Redirecting to dashboard.');
+    }
+    
+    // For managers, only allow viewing items in ViewOnlyTable (can't edit)
+    if (user.role === 'manager') {
+      setActiveTab('items');
     }
   }, [user, navigate]);
 
@@ -72,6 +77,7 @@ const ViewOnlyTable = () => {
   useEffect(() => {
     fetchData();
     setCurrentPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleResultSelect = (result) => {
@@ -166,6 +172,10 @@ const ViewOnlyTable = () => {
   };
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
+
+  const handleGoBack = () => {
+    navigate('/landing');
+  };
 
   const PaginationControls = () => (
     <div className="flex justify-between items-center mt-4 py-4 px-6">
@@ -361,38 +371,54 @@ const ViewOnlyTable = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">View Data</h1>
           <div className="flex space-x-4">
+            {/* For managers, only show Item Data button */}
+            {user?.role === 'manager' ? (
+              <h2 className="px-4 py-2 bg-blue-500 text-white rounded-lg">
+                Item Data (View Only)
+              </h2>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setActiveTab('items');
+                    setCurrentPage(1);
+                    setSearchTerm('');
+                    setIsSearchOpen(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg ${
+                    activeTab === 'items'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Item Data
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('receiving');
+                    setCurrentPage(1);
+                    setSearchTerm('');
+                    setIsSearchOpen(false);
+                  }}
+                  className={`px-4 py-2 rounded-lg ${
+                    activeTab === 'receiving'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  Receiving Data
+                </button>
+              </>
+            )}
             <button
-              onClick={() => {
-                setActiveTab('items');
-                setCurrentPage(1);
-                setSearchTerm('');
-                setIsSearchOpen(false);
-              }}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'items'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
+              onClick={handleGoBack}
+              className="px-4 py-2 bg-indigo-500 text-white rounded-lg shadow-sm hover:bg-indigo-600"
             >
-              Item Data
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('receiving');
-                setCurrentPage(1);
-                setSearchTerm('');
-                setIsSearchOpen(false);
-              }}
-              className={`px-4 py-2 rounded-lg ${
-                activeTab === 'receiving'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              Receiving Data
+              Back to Dashboard
             </button>
           </div>
         </div>
+
         <div className="mb-4">
           <SearchBar
             searchQuery={searchTerm}
@@ -416,6 +442,7 @@ const ViewOnlyTable = () => {
             activeTab={activeTab}
           />
         </div>
+
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             {isLoading ? (

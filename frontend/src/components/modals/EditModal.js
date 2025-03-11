@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../api/axios';
+import { useAuth } from '../../hooks/useAuth';
 
 const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
   const [formData, setFormData] = useState({});
-
+  const { user } = useAuth();
+  
   useEffect(() => {
     // Remove unnecessary fields and prepare form data
     const { id, isVoid, type: dataType, originalIndex, ...rest } = data;
@@ -14,13 +16,20 @@ const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Additional security check for managers - they should not be able to edit items
+    if (user?.role === 'manager' && type === 'items') {
+      toast.error('Managers cannot edit item data');
+      onClose();
+      return;
+    }
+    
     try {
-      const endpoint = type === 'items' 
+      const endpoint = type === 'items'
         ? `/item/update/${data.id}`
         : `/receiving/update/${data.id}`;
 
-      const response = await api.put(endpoint, formData);
-
+      await api.put(endpoint, formData);
       // Pass the complete updated data back
       onUpdate({
         ...data,           // Keep existing data
@@ -31,6 +40,7 @@ const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
 
       toast.success(`${type === 'items' ? 'Item' : 'Receiving data'} updated successfully`);
       onClose();
+
     } catch (error) {
       console.error('Update error:', error);
       toast.error('Failed to update data');
@@ -102,12 +112,10 @@ const EditModal = ({ isOpen, onClose, data, type, onUpdate }) => {
             ×
           </button>
         </div>
-
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(formData).map(([key, value]) => renderField(key, value))}
           </div>
-
           <div className="flex justify-end space-x-2 mt-6">
             <button
               type="button"
