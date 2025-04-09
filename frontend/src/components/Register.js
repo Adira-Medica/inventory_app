@@ -10,7 +10,8 @@ const Register = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'user'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
@@ -36,7 +37,8 @@ const Register = () => {
     try {
       await api.post('/auth/register', {
         username: formData.username,
-        password: formData.password
+        password: formData.password,
+        role: formData.role
       });
      
       setRegistrationSuccess(true);
@@ -53,6 +55,11 @@ const Register = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow text-center">
+          <img 
+            src="/logo.png" 
+            alt="AdiraMedica" 
+            className="h-16 mx-auto mb-4" 
+          />
           <div className="bg-green-100 rounded-full mx-auto p-3 w-16 h-16 flex items-center justify-center">
             <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -86,8 +93,13 @@ const Register = () => {
       className="min-h-screen flex items-center justify-center bg-gray-50"
     >
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+        <div className="text-center">
+          <img 
+            src="/logo.png" 
+            alt="AdiraMedica" 
+            className="h-16 mx-auto mb-2" 
+          />
+          <h2 className="text-3xl font-extrabold text-gray-900">
             Create a new account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -129,7 +141,7 @@ const Register = () => {
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Password"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
@@ -163,7 +175,7 @@ const Register = () => {
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Confirm Password"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
@@ -200,7 +212,6 @@ const Register = () => {
               </select>
             </div>
           </div>
-
           <div>
             <motion.button
               type="submit"

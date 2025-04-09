@@ -78,7 +78,7 @@ const LandingPage = () => {
       path: "/view-items",
       color: "bg-teal-500"
     });
-    
+   
     cards.push({
       title: "Add Receiving Data",
       description: "Add new receiving data",
@@ -86,7 +86,7 @@ const LandingPage = () => {
       path: "/add-receiving",
       color: "bg-emerald-500"
     });
-    
+   
     cards.push({
       title: "Data Management",
       description: "Manage receiving data",
@@ -180,10 +180,11 @@ const LandingPage = () => {
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gray-50"
     >
-      {/* Header with Logout Button */}
+      {/* Header with Logo and Logout Button */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center">
+            <img src="/logo.png" alt="AdiraMedica" className="h-10 mr-4" />
             <h1 className="text-2xl font-bold text-gray-900">AdiraMedica</h1>
             {user && (
               <span className="ml-4 px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm font-medium">
@@ -191,7 +192,6 @@ const LandingPage = () => {
               </span>
             )}
           </div>
-
           <motion.button
             onClick={handleLogout}
             whileHover={{ scale: 1.05 }}

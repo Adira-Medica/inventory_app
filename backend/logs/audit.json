@@ -762,5 +762,482 @@
         "action": "Logout",
         "details": "User logged out",
         "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741784510.311903,
+        "timestamp": "2025-03-12T09:01:50.311903",
+        "username": "Veera",
+        "user_id": 4,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741784837.382592,
+        "timestamp": "2025-03-12T09:07:17.382592",
+        "username": "Veera",
+        "user_id": 4,
+        "action": "Generate Form",
+        "details": "Generated 501A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741785827.074681,
+        "timestamp": "2025-03-12T09:23:47.074681",
+        "username": "Veera",
+        "user_id": 4,
+        "action": "Generate Form",
+        "details": "Generated 519A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741785970.560916,
+        "timestamp": "2025-03-12T09:26:10.560916",
+        "username": "Veera",
+        "user_id": 4,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786082.680866,
+        "timestamp": "2025-03-12T09:28:02.680866",
+        "username": "Veera",
+        "user_id": 4,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786108.214845,
+        "timestamp": "2025-03-12T09:28:28.214845",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786296.337545,
+        "timestamp": "2025-03-12T09:31:36.337545",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786309.322942,
+        "timestamp": "2025-03-12T09:31:49.322942",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786544.387694,
+        "timestamp": "2025-03-12T09:35:44.387694",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Update",
+        "details": "Updated user: Gowtham",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786603.076599,
+        "timestamp": "2025-03-12T09:36:43.076599",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786687.063709,
+        "timestamp": "2025-03-12T09:38:07.063709",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786709.59806,
+        "timestamp": "2025-03-12T09:38:29.598060",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Approve",
+        "details": "Approved user registration: Doris",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786715.635832,
+        "timestamp": "2025-03-12T09:38:35.635832",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741786731.461877,
+        "timestamp": "2025-03-12T09:38:51.461877",
+        "username": "Doris",
+        "user_id": 8,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741888604.385044,
+        "timestamp": "2025-03-13T13:56:44.385044",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741888611.414032,
+        "timestamp": "2025-03-13T13:56:51.414032",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741888644.706129,
+        "timestamp": "2025-03-13T13:57:24.706129",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741888930.424513,
+        "timestamp": "2025-03-13T14:02:10.424513",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741888960.182185,
+        "timestamp": "2025-03-13T14:02:40.182185",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889382.003199,
+        "timestamp": "2025-03-13T14:09:42.003199",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889464.721023,
+        "timestamp": "2025-03-13T14:11:04.721023",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 501A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889630.763315,
+        "timestamp": "2025-03-13T14:13:50.763315",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889808.538644,
+        "timestamp": "2025-03-13T14:16:48.538644",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889887.841398,
+        "timestamp": "2025-03-13T14:18:07.841398",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889911.398902,
+        "timestamp": "2025-03-13T14:18:31.398902",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741889933.238216,
+        "timestamp": "2025-03-13T14:18:53.238216",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741890125.19556,
+        "timestamp": "2025-03-13T14:22:05.195560",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741890376.74467,
+        "timestamp": "2025-03-13T14:26:16.744670",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741894357.338869,
+        "timestamp": "2025-03-13T15:32:37.338869",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 501A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741894873.022052,
+        "timestamp": "2025-03-13T15:41:13.022052",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741894886.441247,
+        "timestamp": "2025-03-13T15:41:26.441247",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741894895.83148,
+        "timestamp": "2025-03-13T15:41:35.831480",
+        "username": "GVR",
+        "user_id": 3,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741894902.351048,
+        "timestamp": "2025-03-13T15:41:42.351048",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741894914.207043,
+        "timestamp": "2025-03-13T15:41:54.207043",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741896895.615707,
+        "timestamp": "2025-03-13T16:14:55.615707",
+        "username": "Doris",
+        "user_id": 8,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741975248.718792,
+        "timestamp": "2025-03-14T14:00:48.718792",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741975668.134692,
+        "timestamp": "2025-03-14T14:07:48.134692",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 520B form for item D200001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741975771.246015,
+        "timestamp": "2025-03-14T14:09:31.246015",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741984743.795884,
+        "timestamp": "2025-03-14T16:39:03.795884",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1741984772.118972,
+        "timestamp": "2025-03-14T16:39:32.118972",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1742165584.362855,
+        "timestamp": "2025-03-16T18:53:04.362855",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1742501698.718981,
+        "timestamp": "2025-03-20T16:14:58.718981",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1742841350.726633,
+        "timestamp": "2025-03-24T14:35:50.726633",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1742841479.275104,
+        "timestamp": "2025-03-24T14:37:59.275104",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1742841645.284324,
+        "timestamp": "2025-03-24T14:40:45.284324",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1742841897.124552,
+        "timestamp": "2025-03-24T14:44:57.124552",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1743801091.712652,
+        "timestamp": "2025-04-04T17:11:31.712652",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1743801189.670858,
+        "timestamp": "2025-04-04T17:13:09.670858",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Generate Form",
+        "details": "Generated 519A form for receiving L103122001",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1743801222.479778,
+        "timestamp": "2025-04-04T17:13:42.479778",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1743810479.07988,
+        "timestamp": "2025-04-04T19:47:59.079880",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744231715.542535,
+        "timestamp": "2025-04-09T16:48:35.542535",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744231724.012985,
+        "timestamp": "2025-04-09T16:48:44.012985",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744231756.692052,
+        "timestamp": "2025-04-09T16:49:16.692052",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
     }
 ]

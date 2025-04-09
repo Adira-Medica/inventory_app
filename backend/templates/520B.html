@@ -58,40 +58,47 @@
             min-height: 4mm;
             border-bottom: 1px solid black;
         }
-        .checkbox-row {
-            display: flex;
-            align-items: center;
-            padding: 0.5mm 1mm;
+        /* New inline checkbox style */
+        .delivery-option-table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
             margin-bottom: 2mm;
         }
-        .checkbox-label {
-            flex: 1;
-            margin-right: 2mm;
-            display: flex;
-            align-items: center;
+        .delivery-option-table td {
+            border: none;
+            padding: 1mm 0;
+            vertical-align: middle;
         }
-        .checkbox-group {
-            display: flex;
-            gap: 10mm;
-            align-items: center;
-            margin-left: auto;
+        .option-label {
+            width: 70%;
+            text-align: left;
+            padding-right: 3mm;
         }
-        .checkbox-option {
-            display: flex;
-            align-items: center;
-            gap: 1mm;
+        .option-checkboxes {
+            width: 30%;
             white-space: nowrap;
         }
-        .dates-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1mm;
-            min-height: 5mm;
+        .checkbox-container {
+            display: inline-block;
+            margin-right: 5mm;
+            white-space: nowrap;
         }
-        .date-options {
-            display: flex;
-            gap: 10mm;
+        /* Table-based horizontal date options */
+        .date-options-table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+        }
+        .date-options-table td {
+            border: none;
+            padding: 2mm 5mm 2mm 0;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .date-value-cell {
+            padding-left: 10mm !important;
+            width: 150px;
         }
         .documents-header {
             background-color: #e6e6e6;
@@ -161,7 +168,6 @@
             <td>Revision: 01</td>
         </tr>
     </table>
-
     <div class="section-title">Delivery Acceptance (Complete At Material Delivery)</div>
     <table>
         <tr>
@@ -208,79 +214,82 @@
         </tr>
         <tr>
             <td colspan="3">
-                <div class="checkbox-row">
-                    <div class="checkbox-label">Material placed in storage as documented above</div>
-                    <div class="checkbox-group">
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.material_placed else '' }} disabled>
-                            <span>N/A</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.material_placed_yes else '' }} disabled>
-                            <span>Yes</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.material_placed_no else '' }} disabled>
-                            <span>No</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="checkbox-row">
-                    <span class="checkbox-label">Discrepancies and/or damaged documented on the shipping paperwork</span>
-                    <div class="checkbox-group">
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.discrepancies else '' }} disabled>
-                            <span>N/A</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.discrepancies_yes else '' }} disabled>
-                            <span>Yes</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.discrepancies_no else '' }} disabled>
-                            <span>No</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="checkbox-row">
-                    <span class="checkbox-label">Supporting documentation received attached</span>
-                    <div class="checkbox-group">
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.supporting_docs else '' }} disabled>
-                            <span>N/A</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.supporting_docs_yes else '' }} disabled>
-                            <span>Yes</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.supporting_docs_no else '' }} disabled>
-                            <span>No</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="checkbox-row">
-                    <span class="checkbox-label">Shipment REJECTED. Reason documented on the shipping paperwork</span>
-                    <div class="checkbox-group">
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.shipment_rejected else '' }} disabled>
-                            <span>N/A</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.shipment_rejected_yes else '' }} disabled>
-                            <span>Yes</span>
-                        </div>
-                        <div class="checkbox-option">
-                            <input type="checkbox" {{ 'checked' if deliveryAcceptance.shipment_rejected_no else '' }} disabled>
-                            <span>No</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- UPDATED INLINE CHECKBOXES -->
+                <table class="delivery-option-table">
+                    <tr>
+                        <td class="option-label">Material placed in storage as documented above</td>
+                        <td class="option-checkboxes">
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.material_placed else '' }} disabled>
+                                <span>N/A</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.material_placed_yes else '' }} disabled>
+                                <span>Yes</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.material_placed_no else '' }} disabled>
+                                <span>No</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="option-label">Discrepancies and/or damaged documented on the shipping paperwork</td>
+                        <td class="option-checkboxes">
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.discrepancies else '' }} disabled>
+                                <span>N/A</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.discrepancies_yes else '' }} disabled>
+                                <span>Yes</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.discrepancies_no else '' }} disabled>
+                                <span>No</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="option-label">Supporting documentation received attached</td>
+                        <td class="option-checkboxes">
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.supporting_docs else '' }} disabled>
+                                <span>N/A</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.supporting_docs_yes else '' }} disabled>
+                                <span>Yes</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.supporting_docs_no else '' }} disabled>
+                                <span>No</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="option-label">Shipment REJECTED. Reason documented on the shipping paperwork</td>
+                        <td class="option-checkboxes">
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptanceNA.shipment_rejected else '' }} disabled>
+                                <span>N/A</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.shipment_rejected_yes else '' }} disabled>
+                                <span>Yes</span>
+                            </div>
+                            <div class="checkbox-container">
+                                <input type="checkbox" {{ 'checked' if deliveryAcceptance.shipment_rejected_no else '' }} disabled>
+                                <span>No</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                
                 <div class="completed-by">Completed By (Name and Initials)/Date: {{ deliveryCompletedBy }}</div>
             </td>
         </tr>
     </table>
-
     <div class="section-title">Receiving Report</div>
     <table>
         <tr>
@@ -339,27 +348,29 @@
         </tr>
         <tr>
             <td colspan="3">
-                <div class="dates-row">
-                    <div class="date-options">
-                        <div style="white-space: nowrap;">
+                <!-- USING TABLE-BASED APPROACH FOR HORIZONTAL DATE OPTIONS -->
+                <table class="date-options-table">
+                    <tr>
+                        <td style="width: 120px;">
                             <input type="checkbox" {{ 'checked' if dateType == 'Expiration Date' else '' }} disabled>
                             <label>Expiry Date</label>
-                        </div>
-                        <div style="white-space: nowrap;">
+                        </td>
+                        <td style="width: 120px;">
                             <input type="checkbox" {{ 'checked' if dateType == 'Retest Date' else '' }} disabled>
                             <label>Retest Date</label>
-                        </div>
-                        <div style="white-space: nowrap;">
+                        </td>
+                        <td style="width: 130px;">
                             <input type="checkbox" {{ 'checked' if dateType == 'Use-by-Date' else '' }} disabled>
                             <label>Use-by-Date</label>
-                        </div>
-                    </div>
-                    <div class="input-area" style="max-width: 150px;">{{ dateValue }}</div>
-                </div>
+                        </td>
+                        <td class="date-value-cell">
+                            {{ dateValue }}
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
-
     <table>
         <tr>
             <td class="documents-header" width="50%">
@@ -402,7 +413,6 @@
             </td>
         </tr>
     </table>
-
     <div style="margin-top: 2mm;">
         <p style="margin: 1mm 0;">Effective Date: 03OCT2022</p>
         <p style="margin: 1mm 0;">Page 1 of 1</p>

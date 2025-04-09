@@ -155,7 +155,8 @@ def get_item_numbers():
     items = ItemNumber.query.all()
     return jsonify([{
         'item_number': item.item_number,
-        'description': item.description
+        'description': item.description,
+        'is_obsolete': item.is_obsolete
     } for item in items])
 
 @bp.route('/get/<item_number>', methods=['GET'])

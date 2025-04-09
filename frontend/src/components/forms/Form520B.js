@@ -68,12 +68,15 @@ const Form520B = () => {
         api.get('/item/numbers'),
         api.get('/receiving/numbers')
       ]);
-      
-      const itemOpts = itemResponse.data.map(item => ({
-        value: item.item_number,
-        label: `${item.item_number} - ${item.description}`
-      }));
-      
+     
+      // Filter out obsoleted items
+      const itemOpts = itemResponse.data
+        .filter(item => !item.is_obsolete) // Filter out obsoleted items
+        .map(item => ({
+          value: item.item_number,
+          label: `${item.item_number} - ${item.description}`
+        }));
+     
       const receivingOpts = receivingResponse.data.map(rec => ({
         value: rec.receiving_no,
         label: rec.receiving_no
@@ -93,7 +96,7 @@ const Form520B = () => {
     try {
       const response = await api.get(`/item/get/${selectedValue}`);
       setSelectedItemData(response.data);
-      
+     
       setFormData(prev => ({
         ...prev,
         ItemNo: selectedValue,
@@ -115,7 +118,7 @@ const Form520B = () => {
     try {
       const response = await api.get(`/receiving/get/${selectedValue}`);
       setSelectedReceivingData(response.data);
-      
+     
       setFormData(prev => ({
         ...prev,
         ReceivingNo: selectedValue,
@@ -133,13 +136,32 @@ const Form520B = () => {
   };
 
   const handleDeliveryOptionChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      deliveryAcceptance: {
-        ...prev.deliveryAcceptance,
-        [field]: value
+    setFormData(prev => {
+      const updatedDeliveryAcceptance = {...prev.deliveryAcceptance};
+      
+      // Reset all values for this field
+      updatedDeliveryAcceptance[field] = value;
+      
+      // Update specific yes/no flags for the template
+      if (field === 'material_placed') {
+        updatedDeliveryAcceptance.material_placed_yes = value === 'yes';
+        updatedDeliveryAcceptance.material_placed_no = value === 'no';
+      } else if (field === 'discrepancies') {
+        updatedDeliveryAcceptance.discrepancies_yes = value === 'yes';
+        updatedDeliveryAcceptance.discrepancies_no = value === 'no';
+      } else if (field === 'supporting_docs') {
+        updatedDeliveryAcceptance.supporting_docs_yes = value === 'yes';
+        updatedDeliveryAcceptance.supporting_docs_no = value === 'no';
+      } else if (field === 'shipment_rejected') {
+        updatedDeliveryAcceptance.shipment_rejected_yes = value === 'yes';
+        updatedDeliveryAcceptance.shipment_rejected_no = value === 'no';
       }
-    }));
+      
+      return {
+        ...prev,
+        deliveryAcceptance: updatedDeliveryAcceptance
+      };
+    });
   };
 
   const handleDateTypeChange = (dateType) => {
@@ -237,7 +259,7 @@ const Form520B = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
       <form onSubmit={handleGeneratePDF} className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-center mb-6">Generate Form 520B</h2>
+        <h2 className="text-2xl font-bold text-center mb-6">CTM Material Receiving Report (Form 520B)</h2>
         <BackButton />
         <div className="space-y-6">
           {/* Item and Receiving Selection */}
@@ -259,7 +281,6 @@ const Form520B = () => {
               required
             />
           </div>
-
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -442,49 +463,34 @@ const Form520B = () => {
             </div>
           </div>
 
-          {/* Date Selection Section */}
+          {/* Date Selection Section - MODIFIED TO HORIZONTAL ROW */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-8">
-              <div className="flex space-x-6">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="dateType"
-                    checked={formData.selectedDateType === 'Expiry Date'}
-                    onChange={() => handleDateTypeChange('Expiry Date')}
-                    className="form-radio h-4 w-4 text-indigo-600"
-                  />
-                  <span className="ml-2">Expiry Date</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="dateType"
-                    checked={formData.selectedDateType === 'Retest Date'}
-                    onChange={() => handleDateTypeChange('Retest Date')}
-                    className="form-radio h-4 w-4 text-indigo-600"
-                  />
-                  <span className="ml-2">Retest Date</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="dateType"
-                    checked={formData.selectedDateType === 'Use-by-Date'}
-                    onChange={() => handleDateTypeChange('Use-by-Date')}
-                    className="form-radio h-4 w-4 text-indigo-600"
-                  />
-                  <span className="ml-2">Use-by-Date</span>
-                </label>
+            <div className="bg-gray-50 p-4 rounded-md">
+              <div className="flex flex-wrap items-center space-x-8">
+                {['Expiry Date', 'Retest Date', 'Use-by-Date'].map(dateType => (
+                  <label key={dateType} className="inline-flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      name="dateType"
+                      checked={formData.selectedDateType === dateType}
+                      onChange={() => handleDateTypeChange(dateType)}
+                      className="form-radio h-4 w-4 text-indigo-600"
+                    />
+                    <span className="text-sm text-gray-700">{dateType}</span>
+                  </label>
+                ))}
+                
+                {formData.selectedDateType && (
+                  <div className="ml-auto">
+                    <input
+                      type="date"
+                      value={formData.dateValue}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dateValue: e.target.value }))}
+                      className="rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                    />
+                  </div>
+                )}
               </div>
-              {formData.selectedDateType && (
-                <input
-                  type="date"
-                  value={formData.dateValue}
-                  onChange={(e) => setFormData(prev => ({ ...prev, dateValue: e.target.value }))}
-                  className="rounded-md border-gray-300"
-                />
-              )}
             </div>
           </div>
 
@@ -570,6 +576,7 @@ const Form520B = () => {
         </div>
       </form>
     </div>
-  );}
+  );
+};
 
-  export default Form520B;
+export default Form520B;
