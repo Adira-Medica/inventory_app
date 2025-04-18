@@ -2,17 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import api from '../../api/axios';
+import { saveAs } from 'file-saver'; // Add this import
 
 const AuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exportLoading, setExportLoading] = useState(false); // New state for export loading
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
     username: '',
     action: ''
   });
-
   const actionTypes = ['All', 'Login', 'Logout', 'Create', 'Update', 'Delete', 'View', 'Generate Form', 'Obsolete'];
 
   useEffect(() => {
@@ -21,7 +22,6 @@ const AuditLogs = () => {
   }, []);
 
   // src/components/admin/AuditLogs.js - update the fetchLogs function
-
   const fetchLogs = async () => {
     setLoading(true);
     try {
@@ -31,10 +31,10 @@ const AuditLogs = () => {
       if (filters.endDate) queryParams.append('endDate', filters.endDate);
       if (filters.username) queryParams.append('username', filters.username);
       if (filters.action) queryParams.append('action', filters.action);
-      
+     
       const url = `/admin/audit-logs${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await api.get(url);
-      
+     
       if (response.data && Array.isArray(response.data)) {
         console.log(`Fetched ${response.data.length} audit logs`);
         setLogs(response.data);
@@ -49,6 +49,61 @@ const AuditLogs = () => {
       toast.warning('Could not fetch audit logs from server, using sample data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add export function
+  const handleExport = async (format) => {
+    try {
+      setExportLoading(true);
+      
+      // Construct query parameters for filtering
+      const queryParams = new URLSearchParams();
+      if (filters.startDate) queryParams.append('startDate', filters.startDate);
+      if (filters.endDate) queryParams.append('endDate', filters.endDate);
+      if (filters.username) queryParams.append('username', filters.username);
+      if (filters.action) queryParams.append('action', filters.action);
+      
+      // Add format parameter
+      queryParams.append('format', format);
+      
+      // Request export with filters
+      const response = await api.get(`/admin/audit-logs/export?${queryParams.toString()}`, {
+        responseType: 'blob'
+      });
+      
+      // Determine filename and type
+      let filename = `audit_logs_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+      let mimeType;
+      
+      switch (format) {
+        case 'excel':
+          filename += '.xlsx';
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'csv':
+          filename += '.csv';
+          mimeType = 'text/csv';
+          break;
+        case 'pdf':
+          filename += '.pdf';
+          mimeType = 'application/pdf';
+          break;
+        default:
+          filename += '.xlsx';
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      }
+      
+      // Create blob and save file
+      const blob = new Blob([response.data], { type: mimeType });
+      saveAs(blob, filename);
+      
+      toast.success(`Logs exported as ${format.toUpperCase()} successfully`);
+    } catch (error) {
+      console.error('Error exporting logs:', error);
+      toast.error('Failed to export logs');
+    } finally {
+      setExportLoading(false);
     }
   };
 
@@ -80,61 +135,61 @@ const AuditLogs = () => {
   // Sample data for demonstration purposes
   const getSampleAuditLogs = () => {
     return [
-      { 
-        id: 1, 
-        timestamp: '2025-02-20T08:32:15', 
-        username: 'admin', 
-        action: 'Login', 
-        details: 'User logged in successfully', 
-        ipAddress: '192.168.1.1' 
+      {
+        id: 1,
+        timestamp: '2025-02-20T08:32:15',
+        username: 'admin',
+        action: 'Login',
+        details: 'User logged in successfully',
+        ipAddress: '192.168.1.1'
       },
-      { 
-        id: 2, 
-        timestamp: '2025-02-20T09:15:22', 
-        username: 'manager1', 
-        action: 'Create', 
-        details: 'Created new item: D200005', 
-        ipAddress: '192.168.1.2' 
+      {
+        id: 2,
+        timestamp: '2025-02-20T09:15:22',
+        username: 'manager1',
+        action: 'Create',
+        details: 'Created new item: D200005',
+        ipAddress: '192.168.1.2'
       },
-      { 
-        id: 3, 
-        timestamp: '2025-02-20T10:45:33', 
-        username: 'user1', 
-        action: 'Generate Form', 
-        details: 'Generated 520B form for item D200001', 
-        ipAddress: '192.168.1.3' 
+      {
+        id: 3,
+        timestamp: '2025-02-20T10:45:33',
+        username: 'user1',
+        action: 'Generate Form',
+        details: 'Generated 520B form for item D200001',
+        ipAddress: '192.168.1.3'
       },
-      { 
-        id: 4, 
-        timestamp: '2025-02-20T11:22:45', 
-        username: 'manager1', 
-        action: 'Update', 
-        details: 'Updated item: D200003', 
-        ipAddress: '192.168.1.2' 
+      {
+        id: 4,
+        timestamp: '2025-02-20T11:22:45',
+        username: 'manager1',
+        action: 'Update',
+        details: 'Updated item: D200003',
+        ipAddress: '192.168.1.2'
       },
-      { 
-        id: 5, 
-        timestamp: '2025-02-20T13:10:05', 
-        username: 'admin', 
-        action: 'Delete', 
-        details: 'Deleted receiving data: L102522001', 
-        ipAddress: '192.168.1.1' 
+      {
+        id: 5,
+        timestamp: '2025-02-20T13:10:05',
+        username: 'admin',
+        action: 'Delete',
+        details: 'Deleted receiving data: L102522001',
+        ipAddress: '192.168.1.1'
       },
-      { 
-        id: 6, 
-        timestamp: '2025-02-20T14:25:18', 
-        username: 'user1', 
-        action: 'Logout', 
-        details: 'User logged out', 
-        ipAddress: '192.168.1.3' 
+      {
+        id: 6,
+        timestamp: '2025-02-20T14:25:18',
+        username: 'user1',
+        action: 'Logout',
+        details: 'User logged out',
+        ipAddress: '192.168.1.3'
       },
-      { 
-        id: 7, 
-        timestamp: '2025-02-20T15:30:22', 
-        username: 'admin', 
-        action: 'Update', 
-        details: 'Updated user role: manager1 to admin', 
-        ipAddress: '192.168.1.1' 
+      {
+        id: 7,
+        timestamp: '2025-02-20T15:30:22',
+        username: 'admin',
+        action: 'Update',
+        details: 'Updated user role: manager1 to admin',
+        ipAddress: '192.168.1.1'
       }
     ];
   };
@@ -147,7 +202,7 @@ const AuditLogs = () => {
   return (
     <div>
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Audit Logs</h2>
-      
+     
       <div className="bg-gray-50 p-4 rounded-md mb-6">
         <h3 className="text-lg font-medium mb-4">Filter Logs</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -161,7 +216,7 @@ const AuditLogs = () => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          
+         
           <div>
             <label className="block text-sm font-medium text-gray-700">End Date</label>
             <input
@@ -172,7 +227,7 @@ const AuditLogs = () => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          
+         
           <div>
             <label className="block text-sm font-medium text-gray-700">Username</label>
             <input
@@ -184,7 +239,7 @@ const AuditLogs = () => {
               placeholder="Filter by username"
             />
           </div>
-          
+         
           <div>
             <label className="block text-sm font-medium text-gray-700">Action Type</label>
             <select
@@ -201,7 +256,7 @@ const AuditLogs = () => {
             </select>
           </div>
         </div>
-        
+       
         <div className="mt-4 flex justify-end space-x-4">
           <button
             onClick={resetFilters}
@@ -217,7 +272,35 @@ const AuditLogs = () => {
           </button>
         </div>
       </div>
-      
+     
+      {/* Export Options */}
+      <div className="bg-gray-50 p-4 rounded-md mb-6">
+        <h3 className="text-lg font-medium mb-4">Export Options</h3>
+        <div className="flex flex-wrap gap-4">
+          <button
+            onClick={() => handleExport('excel')}
+            disabled={exportLoading}
+            className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+          >
+            {exportLoading ? 'Exporting...' : 'Export Excel'}
+          </button>
+          <button
+            onClick={() => handleExport('csv')}
+            disabled={exportLoading}
+            className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {exportLoading ? 'Exporting...' : 'Export CSV'}
+          </button>
+          <button
+            onClick={() => handleExport('pdf')}
+            disabled={exportLoading}
+            className="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+          >
+            {exportLoading ? 'Exporting...' : 'Export PDF'}
+          </button>
+        </div>
+      </div>
+     
       {loading ? (
         <div className="flex justify-center items-center h-32">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -268,7 +351,7 @@ const AuditLogs = () => {
                     {log.details}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {log.ipAddress}
+                    {log.ipAddress || log.ip_address}
                   </td>
                 </tr>
               ))}

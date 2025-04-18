@@ -1,5 +1,6 @@
 // src/api/axios.js
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 // Create axios instance with base URL and default headers
 const api = axios.create({
@@ -17,7 +18,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
-    
+   
     // Log outgoing requests for debugging
     console.log(`Making ${config.method.toUpperCase()} request to: ${config.url}`);
     return config;
@@ -40,7 +41,7 @@ api.interceptors.response.use(
     // Log all API errors for debugging
     console.error('API Error:', error.response?.status, error.response?.data || error.message);
     console.error('Failed request URL:', error.config?.url);
-    
+   
     // Handle token expiration
     if (error.response && error.response.status === 401) {
       // If we get unauthorized, clear token if it exists
@@ -49,11 +50,36 @@ api.interceptors.response.use(
         console.warn('Token expired or invalid, logging out');
         localStorage.removeItem('token');
         window.location.href = '/login'; // Redirect to login
+        toast.error('Your session has expired. Please log in again.', {
+          toastId: 'session-expired' // Prevent duplicate toasts
+        });
       }
     }
     
+    // Handle rate limiting
+    if (error.response && error.response.status === 429) {
+      toast.error('Too many requests. Please try again later.', {
+        toastId: 'rate-limited'
+      });
+    }
+   
     return Promise.reject(error);
   }
 );
+
+// Function to refresh token
+export const refreshToken = async () => {
+  try {
+    const response = await api.post('/auth/extend-session');
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    return false;
+  }
+};
 
 export default api;

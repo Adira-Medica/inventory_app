@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1744922226.184475,
+        "timestamp": "2025-04-17T16:37:06.184475",
+        "event_type": "authentication",
+        "action": "Login",
+        "username": "Goveera",
+        "user_id": 9,
+        "success": true,
+        "details": "User logged in successfully",
+        "ip_address": "127.0.0.1",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    },
+    {
+        "id": 1744922860.57787,
+        "timestamp": "2025-04-17T16:47:40.577870",
+        "event_type": "authentication",
+        "action": "Logout",
+        "username": "Goveera",
+        "user_id": 9,
+        "success": true,
+        "details": "User logged out",
+        "ip_address": "127.0.0.1",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    },
+    {
+        "id": 1744922885.606142,
+        "timestamp": "2025-04-17T16:48:05.606142",
+        "event_type": "authentication",
+        "action": "Login",
+        "username": "Goveera",
+        "user_id": 9,
+        "success": true,
+        "details": "User logged in successfully",
+        "ip_address": "127.0.0.1",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    },
+    {
+        "id": 1744923158.110698,
+        "timestamp": "2025-04-17T16:52:38.110698",
+        "event_type": "authentication",
+        "action": "Logout",
+        "username": "Goveera",
+        "user_id": 9,
+        "success": true,
+        "details": "User logged out",
+        "ip_address": "127.0.0.1",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    }
+]

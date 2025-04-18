@@ -1,8 +1,8 @@
-"""initial migration
+"""initial schema with users and roles
 
-Revision ID: ceeb61de3c15
-Revises: 18629a71e680
-Create Date: 2025-01-09 23:11:16.757508
+Revision ID: f32df3737540
+Revises: 
+Create Date: 2025-04-17 15:56:20.932802
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'ceeb61de3c15'
-down_revision = '18629a71e680'
+revision = 'f32df3737540'
+down_revision = None
 branch_labels = None
 depends_on = None
 
@@ -28,11 +28,19 @@ def upgrade():
     op.create_table('users',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('username', sa.String(length=100), nullable=False),
+    sa.Column('email', sa.String(length=100), nullable=False),
+    sa.Column('first_name', sa.String(length=50), nullable=True),
+    sa.Column('last_name', sa.String(length=50), nullable=True),
     sa.Column('password_hash', sa.String(length=255), nullable=False),
     sa.Column('role_id', sa.Integer(), nullable=True),
     sa.Column('active', sa.Boolean(), nullable=True),
+    sa.Column('status', sa.String(length=20), nullable=True),
+    sa.Column('registration_date', sa.DateTime(), nullable=True),
+    sa.Column('failed_login_attempts', sa.Integer(), nullable=True),
+    sa.Column('lockout_until', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['role_id'], ['roles.id'], ),
     sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
     op.create_table('item_number',
@@ -58,6 +66,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('is_obsolete', sa.Boolean(), nullable=True),
+    sa.Column('display_order', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.ForeignKeyConstraint(['updated_by'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
@@ -85,6 +95,8 @@ def upgrade():
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.Column('updated_by', sa.Integer(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('is_obsolete', sa.Boolean(), nullable=True),
+    sa.Column('display_order', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['created_by'], ['users.id'], ),
     sa.ForeignKeyConstraint(['item_number'], ['item_number.item_number'], ),
     sa.ForeignKeyConstraint(['updated_by'], ['users.id'], ),

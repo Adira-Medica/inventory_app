@@ -1239,5 +1239,41 @@
         "action": "Logout",
         "details": "User logged out",
         "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744329373.8073,
+        "timestamp": "2025-04-10T19:56:13.807300",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Login",
+        "details": "User logged in successfully",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744329402.746589,
+        "timestamp": "2025-04-10T19:56:42.746589",
+        "username": "admin",
+        "user_id": 1,
+        "action": "Logout",
+        "details": "User logged out",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744922900.780837,
+        "timestamp": "2025-04-17T16:48:20.780837",
+        "username": "Goveera",
+        "user_id": 9,
+        "action": "Export",
+        "details": "Exported audit logs in excel format with 143 entries",
+        "ipAddress": "127.0.0.1"
+    },
+    {
+        "id": 1744922913.757115,
+        "timestamp": "2025-04-17T16:48:33.757115",
+        "username": "Goveera",
+        "user_id": 9,
+        "action": "Export",
+        "details": "Exported audit logs in pdf format with 144 entries",
+        "ipAddress": "127.0.0.1"
     }
 ]

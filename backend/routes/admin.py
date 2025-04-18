@@ -1,5 +1,5 @@
 # backend/routes/admin.py
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file, Response
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..utils.role_checker import role_required
 from ..models import User, Role, ItemNumber, ReceivingData
@@ -8,6 +8,14 @@ from ..utils.audit_logger import log_activity
 from datetime import datetime, timedelta
 import os
 import json
+import pandas as pd
+import io
+import csv
+from reportlab.lib import colors # type: ignore
+from reportlab.lib.pagesizes import letter, landscape # type: ignore
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer # type: ignore
+from reportlab.lib.styles import getSampleStyleSheet # type: ignore
+
 
 bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 
@@ -509,4 +517,214 @@ def update_user_status(id):
     except Exception as e:
         db.session.rollback()
         print(f"Error updating user status: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
+# Add this new endpoint for log export
+@bp.route('/audit-logs/export', methods=['GET'])
+@jwt_required()
+@role_required(['admin'])
+def export_audit_logs():
+    try:
+        # Get query parameters for filtering
+        format_type = request.args.get('format', 'excel')
+        log_type = request.args.get('type', 'all')  # 'all', 'audit', 'auth'
+        start_date = request.args.get('startDate')
+        end_date = request.args.get('endDate')
+        username = request.args.get('username')
+        action_type = request.args.get('action')
+        
+        # Determine which log files to read
+        log_files = []
+        if log_type == 'all' or log_type == 'audit':
+            log_files.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs', 'audit.json'))
+        
+        if log_type == 'all' or log_type == 'auth':
+            log_files.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs', 'auth_audit.json'))
+        
+        # Collect all logs
+        all_logs = []
+        for log_file in log_files:
+            if os.path.exists(log_file):
+                with open(log_file, 'r') as f:
+                    try:
+                        logs = json.load(f)
+                        if isinstance(logs, list):
+                            all_logs.extend(logs)
+                    except json.JSONDecodeError:
+                        pass
+        
+        # Apply filters
+        filtered_logs = all_logs
+        
+        if start_date:
+            filtered_logs = [log for log in filtered_logs
+                           if log['timestamp'] >= start_date]
+        
+        if end_date:
+            # Add one day to include the end date fully
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+            end_date_obj = end_date_obj + timedelta(days=1)
+            end_date = end_date_obj.strftime('%Y-%m-%d')
+            filtered_logs = [log for log in filtered_logs
+                           if log['timestamp'] < end_date]
+        
+        if username:
+            filtered_logs = [log for log in filtered_logs
+                           if username.lower() in log.get('username', '').lower()]
+        
+        if action_type:
+            filtered_logs = [log for log in filtered_logs
+                           if log.get('action') == action_type]
+        
+        # Sort logs by timestamp (newest first)
+        filtered_logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        # Log the export activity
+        log_activity(
+            action="Export",
+            details=f"Exported audit logs in {format_type} format with {len(filtered_logs)} entries"
+        )
+        
+        # Create export based on requested format
+        if format_type == 'excel':
+            # Create Excel file
+            output = io.BytesIO()
+            
+            if not filtered_logs:
+                # Create an empty dataframe with headers if no logs
+                df = pd.DataFrame(columns=['timestamp', 'username', 'action', 'details', 'ip_address'])
+            else:
+                df = pd.DataFrame(filtered_logs)
+            
+            # Convert timestamp to readable format
+            if 'timestamp' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['timestamp']).dt.strftime('%Y-%m-%d %H:%M:%S')
+            
+            with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Logs')
+                
+                # Auto-adjust columns' width
+                worksheet = writer.sheets['Logs']
+                for i, col in enumerate(df.columns):
+                    max_length = max(df[col].astype(str).str.len().max() if len(df) > 0 else 0, len(col)) + 2
+                    worksheet.column_dimensions[chr(65 + i)].width = max_length
+            
+            output.seek(0)
+            
+            return send_file(
+                output,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'audit_logs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            )
+            
+        elif format_type == 'csv':
+            # Create CSV file
+            output = io.StringIO()
+            
+            if filtered_logs:
+                # Get all possible columns from all logs
+                all_columns = set()
+                for log in filtered_logs:
+                    all_columns.update(log.keys())
+                
+                writer = csv.DictWriter(output, fieldnames=sorted(list(all_columns)))
+                writer.writeheader()
+                writer.writerows(filtered_logs)
+            else:
+                # Write an empty CSV with headers
+                writer = csv.writer(output)
+                writer.writerow(['timestamp', 'username', 'action', 'details', 'ip_address'])
+            
+            return Response(
+                output.getvalue(),
+                mimetype='text/csv',
+                headers={
+                    'Content-Disposition': f'attachment; filename=audit_logs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+                }
+            )
+            
+        elif format_type == 'pdf':
+            # Create a PDF report
+            output = io.BytesIO()
+            doc = SimpleDocTemplate(output, pagesize=landscape(letter))
+            
+            elements = []
+            styles = getSampleStyleSheet()
+            
+            # Add title
+            elements.append(Paragraph("Audit Logs Report", styles['Heading1']))
+            elements.append(Paragraph(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+            
+            # Add filters information if any
+            filter_info = []
+            if start_date:
+                filter_info.append(f"Start date: {start_date}")
+            if end_date:
+                filter_info.append(f"End date: {end_date}")
+            if username:
+                filter_info.append(f"Username: {username}")
+            if action_type:
+                filter_info.append(f"Action: {action_type}")
+                
+            if filter_info:
+                elements.append(Paragraph("Filters: " + ", ".join(filter_info), styles['Normal']))
+            
+            elements.append(Spacer(1, 12))
+            
+            # Define columns to include in PDF
+            columns = ['timestamp', 'username', 'action', 'details', 'ip_address']
+            header = ['Timestamp', 'Username', 'Action', 'Details', 'IP Address']
+            
+            # Create data for table
+            data = [header]  # Header row
+            
+            for log in filtered_logs:
+                row = [
+                    log.get('timestamp', ''),
+                    log.get('username', ''),
+                    log.get('action', ''),
+                    log.get('details', ''),
+                    log.get('ip_address', '')
+                ]
+                data.append(row)
+            
+            # If no logs, add an empty row
+            if len(data) == 1:
+                data.append(['No logs found'] + [''] * 4)
+            
+            # Create table
+            table = Table(data)
+            
+            # Add style
+            style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ])
+            table.setStyle(style)
+            
+            elements.append(table)
+            
+            # Build PDF
+            doc.build(elements)
+            output.seek(0)
+            
+            return send_file(
+                output,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=f'audit_logs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+            )
+        
+        else:
+            return jsonify({'error': 'Unsupported export format'}), 400
+            
+    except Exception as e:
+        print(f"Error exporting audit logs: {str(e)}")
         return jsonify({'error': str(e)}), 500

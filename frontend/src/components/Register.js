@@ -1,14 +1,15 @@
-// src/components/Register.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import api from '../api/axios';
+import { validatePassword } from '../utils/passwordValidator';
 
 const Register = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
+    email: '',
     password: '',
     confirmPassword: '',
     role: 'user'
@@ -17,18 +18,51 @@ const Register = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
- 
+  const [passwordErrors, setPasswordErrors] = useState([]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    
+    // Validate password as user types
+    if (name === 'password') {
+      const { valid, errors } = validatePassword(value);
+      setPasswordErrors(errors);
+    }
+  };
+
+  const validateEmail = (email) => {
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+    
+    // Enterprise domain validation (configure allowed domains)
+    const allowedDomains = ['adiramedica.com', 'adirahealth.com'];
+    const domain = email.split('@')[1].toLowerCase();
+    return allowedDomains.includes(domain);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
    
-    // Basic validation
+    // Validate password
+    const { valid, errors } = validatePassword(formData.password);
+    if (!valid) {
+      errors.forEach(error => toast.error(error));
+      return;
+    }
+    
+    // Validate password match
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match.");
+      return;
+    }
+    
+    // Validate email
+    if (!validateEmail(formData.email)) {
+      toast.error("Please use a valid company email address (@adiramedica.com or @adirahealth.com)");
       return;
     }
    
@@ -37,6 +71,7 @@ const Register = () => {
     try {
       await api.post('/auth/register', {
         username: formData.username,
+        email: formData.email,
         password: formData.password,
         role: formData.role
       });
@@ -55,11 +90,6 @@ const Register = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow text-center">
-          <img 
-            src="/logo.png" 
-            alt="AdiraMedica" 
-            className="h-16 mx-auto mb-4" 
-          />
           <div className="bg-green-100 rounded-full mx-auto p-3 w-16 h-16 flex items-center justify-center">
             <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -93,13 +123,8 @@ const Register = () => {
       className="min-h-screen flex items-center justify-center bg-gray-50"
     >
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div className="text-center">
-          <img 
-            src="/logo.png" 
-            alt="AdiraMedica" 
-            className="h-16 mx-auto mb-2" 
-          />
-          <h2 className="text-3xl font-extrabold text-gray-900">
+        <div>
+          <h2 className="text-center text-3xl font-extrabold text-gray-900">
             Create a new account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
@@ -125,6 +150,24 @@ const Register = () => {
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
               />
+            </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleInputChange}
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="email@adiramedica.com"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Use your company email address (@adiramedica.com or @adirahealth.com)
+              </p>
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -158,6 +201,18 @@ const Register = () => {
                     </svg>
                   )}
                 </button>
+              </div>
+              {passwordErrors.length > 0 && (
+                <div className="mt-1 text-sm text-red-600">
+                  <ul className="list-disc pl-5">
+                    {passwordErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              <div className="mt-1 text-xs text-gray-500">
+                Password must be at least 8 characters and include uppercase, lowercase, numbers, and special characters.
               </div>
             </div>
             <div>
