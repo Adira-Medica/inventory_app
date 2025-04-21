@@ -46,5 +46,29 @@
         "details": "User logged out",
         "ip_address": "127.0.0.1",
         "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    },
+    {
+        "id": 1745273015.929964,
+        "timestamp": "2025-04-21T18:03:35.929964",
+        "event_type": "authentication",
+        "action": "Login",
+        "username": "Goveera",
+        "user_id": 9,
+        "success": true,
+        "details": "User logged in successfully",
+        "ip_address": "127.0.0.1",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
+    },
+    {
+        "id": 1745273132.089987,
+        "timestamp": "2025-04-21T18:05:32.089987",
+        "event_type": "authentication",
+        "action": "Logout",
+        "username": "Goveera",
+        "user_id": 9,
+        "success": true,
+        "details": "User logged out",
+        "ip_address": "127.0.0.1",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"
     }
 ]

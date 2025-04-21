@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
@@ -26,7 +26,7 @@ const Register = () => {
     
     // Validate password as user types
     if (name === 'password') {
-      const { valid, errors } = validatePassword(value);
+      const { errors } = validatePassword(value);
       setPasswordErrors(errors);
     }
   };
@@ -124,6 +124,11 @@ const Register = () => {
     >
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
         <div>
+          <img
+            className="mx-auto h-12 w-auto"
+            src="/logo.png"
+            alt="AdiraMedica Logo"
+          />
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
             Create a new account
           </h2>
