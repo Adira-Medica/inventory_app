@@ -78,12 +78,15 @@ jobs:
         run: |
           if [ -d "inventory_app/backend" ]; then
             echo "backend_path=inventory_app/backend" >> $GITHUB_OUTPUT
+            echo "✅ Found backend at inventory_app/backend"
           elif [ -d "backend" ]; then
             echo "backend_path=backend" >> $GITHUB_OUTPUT
+            echo "✅ Found backend at backend"
           elif [ -f "requirements.txt" ]; then
             echo "backend_path=." >> $GITHUB_OUTPUT
+            echo "✅ Found requirements.txt at root"
           else
-            echo "Backend directory not found!"
+            echo "❌ Backend directory not found!"
             exit 1
           fi
 
@@ -120,30 +123,76 @@ jobs:
         run: |
           cd ${{ steps.find-backend.outputs.backend_path }}
           export DATABASE_URL="postgresql://test_user:test_password@localhost:5432/test_inventory_db"
+          # Fix relative imports by adding parent directory to Python path
+          export PYTHONPATH="${{ github.workspace }}:$PYTHONPATH"
           python -c "
+          import sys
           import os
+          
+          # Add the project root to Python path to fix relative imports
+          sys.path.insert(0, '${{ github.workspace }}')
+          sys.path.insert(0, '${{ github.workspace }}/inventory_app')
+          sys.path.insert(0, '${{ github.workspace }}/inventory_app/backend')
+          
           os.environ['DATABASE_URL'] = 'postgresql://test_user:test_password@localhost:5432/test_inventory_db'
-          from extensions import db
-          from models import *
-          db.create_all()
-          print('Database tables created successfully')
+          
+          try:
+            from extensions import db
+            from models import User, Role, ItemNumber, ReceivingData
+            db.create_all()
+            print('✅ Database tables created successfully')
+          except Exception as e:
+            print(f'❌ Error creating database: {e}')
+            # Try alternative import
+            try:
+              import inventory_app.backend.extensions as ext
+              import inventory_app.backend.models as models
+              ext.db.create_all()
+              print('✅ Database tables created successfully (alternative import)')
+            except Exception as e2:
+              print(f'❌ Alternative import also failed: {e2}')
+              raise
           "
 
       - name: Run backend tests
         run: |
           cd ${{ steps.find-backend.outputs.backend_path }}
           export DATABASE_URL="postgresql://test_user:test_password@localhost:5432/test_inventory_db"
+          export PYTHONPATH="${{ github.workspace }}:$PYTHONPATH"
+          
+          # Add paths to fix imports
+          export PYTHONPATH="${{ github.workspace }}:${{ github.workspace }}/inventory_app:${{ github.workspace }}/inventory_app/backend:$PYTHONPATH"
+          
           # Run tests if they exist, otherwise just validate imports
           if [ -d "tests" ]; then
             pytest tests/ -v --cov=. --cov-report=xml
           else
             echo "No tests directory found, validating app can start..."
             python -c "
+            import sys
             import os
+            
+            # Add paths for imports
+            sys.path.insert(0, '${{ github.workspace }}')
+            sys.path.insert(0, '${{ github.workspace }}/inventory_app')
+            sys.path.insert(0, '${{ github.workspace }}/inventory_app/backend')
+            
             os.environ['DATABASE_URL'] = 'postgresql://test_user:test_password@localhost:5432/test_inventory_db'
-            from run import create_app
-            app = create_app()
-            print('✅ Backend app created successfully')
+            
+            try:
+              from run import create_app
+              app = create_app()
+              print('✅ Backend app created successfully')
+            except Exception as e:
+              print(f'❌ Error creating app: {e}')
+              # Try alternative import method
+              try:
+                import inventory_app.backend.run as run_module
+                app = run_module.create_app()
+                print('✅ Backend app created successfully (alternative)')
+              except Exception as e2:
+                print(f'❌ Alternative app creation failed: {e2}')
+                raise
             "
           fi
 
@@ -175,12 +224,15 @@ jobs:
         run: |
           if [ -d "inventory_app/frontend" ]; then
             echo "frontend_path=inventory_app/frontend" >> $GITHUB_OUTPUT
+            echo "✅ Found frontend at inventory_app/frontend"
           elif [ -d "frontend" ]; then
             echo "frontend_path=frontend" >> $GITHUB_OUTPUT
+            echo "✅ Found frontend at frontend"
           elif [ -f "package.json" ]; then
             echo "frontend_path=." >> $GITHUB_OUTPUT
+            echo "✅ Found package.json at root"
           else
-            echo "Frontend directory not found!"
+            echo "❌ Frontend directory not found!"
             exit 1
           fi
 
@@ -242,9 +294,10 @@ jobs:
 
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && github.repository_owner != 'your-username'  # Skip if Advanced Security not enabled
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true  # Don't fail the build if upload fails
 
       - name: Set up Python for security scan
         uses: actions/setup-python@v4
