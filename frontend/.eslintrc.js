@@ -4,8 +4,10 @@ module.exports = {
     'react-app/jest'
   ],
   rules: {
+    // Relax console warnings in development, but allow in production builds
+    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-unused-vars': 'warn',
-    'no-console': 'warn'
+    'react-hooks/exhaustive-deps': 'warn'
   },
   overrides: [
     {

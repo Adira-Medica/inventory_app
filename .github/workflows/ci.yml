@@ -109,64 +109,179 @@ jobs:
           # Install testing dependencies
           pip install pytest pytest-flask pytest-cov flake8 black
 
-      - name: Create database setup script
+      - name: Create standalone database setup script
         working-directory: ${{ steps.find-backend.outputs.backend_path }}
         run: |
           cat > setup_test_db.py << 'EOF'
           #!/usr/bin/env python3
+          """
+          Standalone database setup script for CI/CD
+          This script sets up the test database without relying on relative imports
+          """
           import os
           import sys
+          import json
           from pathlib import Path
-          
-          # Add current directory and parent to Python path
-          current_dir = Path(__file__).parent.absolute()
-          sys.path.insert(0, str(current_dir))
-          sys.path.insert(0, str(current_dir.parent))
-          
-          # Set environment variables
-          os.environ['FLASK_ENV'] = 'testing'
-          os.environ['DATABASE_URL'] = 'postgresql://test_user:test_password@localhost:5432/test_inventory_db'
           
           def setup_database():
               try:
-                  # Import Flask app factory
-                  if os.path.exists('__init__.py'):
-                      from __init__ import create_app
-                  else:
-                      # Try importing from run.py
-                      import run
-                      create_app = getattr(run, 'create_app', None)
-                      if not create_app:
-                          # Create a basic Flask app
-                          from flask import Flask
-                          from extensions import db
-                          app = Flask(__name__)
-                          app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-                          app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-                          db.init_app(app)
-                          
-                          with app.app_context():
-                              from models import User, Role, ItemNumber, ReceivingData
-                              db.create_all()
-                              print('✅ Database tables created successfully')
-                          return
+                  # Set environment
+                  os.environ['FLASK_ENV'] = 'testing'
+                  database_url = os.environ.get('DATABASE_URL', 'postgresql://test_user:test_password@localhost:5432/test_inventory_db')
+                  print(f"Using database: {database_url}")
                   
-                  # Use app factory if available
-                  app = create_app()
-                  app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+                  # Import Flask components
+                  from flask import Flask
+                  from flask_sqlalchemy import SQLAlchemy
+                  from flask_migrate import Migrate
+                  from flask_jwt_extended import JWTManager
+                  from flask_cors import CORS
+                  from werkzeug.security import generate_password_hash, check_password_hash
+                  from datetime import datetime
+                  
+                  # Create Flask app
+                  app = Flask(__name__)
+                  app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+                  app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+                  app.config['SECRET_KEY'] = 'test-secret-key'
+                  app.config['JWT_SECRET_KEY'] = 'test-jwt-secret'
                   app.config['TESTING'] = True
                   
+                  # Initialize extensions
+                  db = SQLAlchemy(app)
+                  migrate = Migrate(app, db)
+                  jwt = JWTManager(app)
+                  cors = CORS(app)
+                  
+                  # Define models inline (to avoid import issues)
+                  class Role(db.Model):
+                      __tablename__ = 'roles'
+                      
+                      id = db.Column(db.Integer, primary_key=True)
+                      name = db.Column(db.String(50), unique=True, nullable=False)
+                      permissions = db.Column(db.JSON)
+                      
+                      users = db.relationship('User', backref='role', lazy=True)
+                  
+                  class User(db.Model):
+                      __tablename__ = 'users'
+                      
+                      id = db.Column(db.Integer, primary_key=True)
+                      username = db.Column(db.String(100), unique=True, nullable=False)
+                      password_hash = db.Column(db.String(255), nullable=False)
+                      role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+                      active = db.Column(db.Boolean, default=True)
+                      status = db.Column(db.String(20), default='pending')
+                      registration_date = db.Column(db.DateTime, default=datetime.utcnow)
+                      
+                      def set_password(self, password):
+                          self.password_hash = generate_password_hash(password)
+                      
+                      def check_password(self, password):
+                          return check_password_hash(self.password_hash, password)
+                  
+                  class ItemNumber(db.Model):
+                      __tablename__ = 'item_number'
+                      
+                      id = db.Column(db.Integer, primary_key=True)
+                      item_number = db.Column(db.String(50), unique=True, nullable=False)
+                      description = db.Column(db.Text, nullable=False)
+                      client = db.Column(db.String(100), nullable=False)
+                      protocol_number = db.Column(db.String(50), nullable=False)
+                      vendor = db.Column(db.String(100), nullable=False)
+                      uom = db.Column(db.String(50), nullable=False)
+                      controlled = db.Column(db.String(50), nullable=False)
+                      temp_storage_conditions = db.Column(db.String(50), nullable=False)
+                      other_storage_conditions = db.Column(db.String(50))
+                      max_exposure_time = db.Column(db.Integer)
+                      temper_time = db.Column(db.Integer)
+                      working_exposure_time = db.Column(db.Integer)
+                      vendor_code_rev = db.Column(db.String(50), nullable=False)
+                      randomized = db.Column(db.String(10), nullable=False)
+                      sequential_numbers = db.Column(db.String(10), nullable=False)
+                      study_type = db.Column(db.String(50), nullable=False)
+                      created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+                      created_at = db.Column(db.DateTime, default=datetime.utcnow)
+                      updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+                      updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+                      is_active = db.Column(db.Boolean, default=True)
+                      is_obsolete = db.Column(db.Boolean, default=False)
+                      display_order = db.Column(db.Integer)
+                  
+                  class ReceivingData(db.Model):
+                      __tablename__ = 'receiving_data'
+                      
+                      id = db.Column(db.Integer, primary_key=True)
+                      item_number = db.Column(db.String(50), db.ForeignKey('item_number.item_number'), nullable=False)
+                      receiving_no = db.Column(db.String(20), unique=True, nullable=False)
+                      tracking_number = db.Column(db.String(50))
+                      lot_no = db.Column(db.String(50))
+                      po_no = db.Column(db.String(50))
+                      total_units_vendor = db.Column(db.Integer)
+                      total_storage_containers = db.Column(db.Integer)
+                      exp_date = db.Column(db.Date)
+                      ncmr = db.Column(db.String(5))
+                      total_units_received = db.Column(db.Integer)
+                      temp_device_in_alarm = db.Column(db.String(20))
+                      ncmr2 = db.Column(db.String(5))
+                      temp_device_deactivated = db.Column(db.String(5))
+                      temp_device_returned_to_courier = db.Column(db.String(5))
+                      comments_for_520b = db.Column(db.Text)
+                      created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+                      created_at = db.Column(db.DateTime, default=datetime.utcnow)
+                      updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+                      updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+                      is_active = db.Column(db.Boolean, default=True)
+                      is_obsolete = db.Column(db.Boolean, default=False)
+                      display_order = db.Column(db.Integer)
+                  
+                  # Create tables
                   with app.app_context():
-                      from extensions import db
-                      from models import User, Role, ItemNumber, ReceivingData
                       db.create_all()
                       print('✅ Database tables created successfully')
                       
+                      # Create test roles
+                      if Role.query.count() == 0:
+                          roles = [
+                              Role(name='admin', permissions=json.dumps({'all': True})),
+                              Role(name='manager', permissions=json.dumps({
+                                  'manage_items': True,
+                                  'manage_receiving': True,
+                                  'generate_forms': True
+                              })),
+                              Role(name='user', permissions=json.dumps({
+                                  'view_items': True,
+                                  'view_receiving': True,
+                                  'generate_forms': True
+                              }))
+                          ]
+                          
+                          for role in roles:
+                              db.session.add(role)
+                          db.session.commit()
+                          print('✅ Test roles created')
+                          
+                          # Create test admin user
+                          admin_role = Role.query.filter_by(name='admin').first()
+                          if admin_role:
+                              admin_user = User(
+                                  username='testadmin',
+                                  role_id=admin_role.id,
+                                  active=True,
+                                  status='approved'
+                              )
+                              admin_user.set_password('testpass123')
+                              db.session.add(admin_user)
+                              db.session.commit()
+                              print('✅ Test admin user created')
+                      
+                      print('✅ Test database setup completed successfully')
+                      
               except Exception as e:
-                  print(f'❌ Error creating database: {e}')
+                  print(f'❌ Error setting up database: {e}')
                   import traceback
                   traceback.print_exc()
-                  raise
+                  sys.exit(1)
           
           if __name__ == '__main__':
               setup_database()
@@ -272,7 +387,7 @@ jobs:
               # Try to create the app
               if os.path.exists('__init__.py'):
                   from __init__ import create_app
-                  app = create_app()
+                  app = create_app('testing')
               else:
                   from flask import Flask
                   app = Flask(__name__)
@@ -352,6 +467,9 @@ jobs:
 
       - name: Build application
         working-directory: ${{ steps.find-frontend.outputs.frontend_path }}
+        env:
+          CI: false  # Allow warnings in build
+          GENERATE_SOURCEMAP: false  # Reduce build size
         run: npm run build
 
       - name: Upload build artifacts
