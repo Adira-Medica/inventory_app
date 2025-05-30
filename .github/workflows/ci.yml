@@ -309,6 +309,8 @@ jobs:
           black --check --diff . --exclude="migrations/" || echo "Black formatting check failed, but continuing..."
 
       - name: Run backend tests
+        timeout-minutes: 2
+            
         working-directory: ${{ steps.find-backend.outputs.backend_path }}
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_inventory_db
