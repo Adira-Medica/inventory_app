@@ -7,6 +7,12 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+# Add permissions for security scanning
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
 env:
   PYTHON_VERSION: '3.9'
   NODE_VERSION: '18'
@@ -94,7 +100,8 @@ jobs:
           cd ${{ steps.find-backend.outputs.backend_path }}
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov flake8 black
+          # Install additional dev dependencies
+          pip install pytest pytest-cov flake8 black flask-migrate
 
       - name: Lint with flake8
         run: |
@@ -161,11 +168,25 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: inventory_app/frontend/package-lock.json
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Find frontend directory
+        id: find-frontend
+        run: |
+          if [ -d "inventory_app/frontend" ]; then
+            echo "frontend_path=inventory_app/frontend" >> $GITHUB_OUTPUT
+          elif [ -d "frontend" ]; then
+            echo "frontend_path=frontend" >> $GITHUB_OUTPUT
+          elif [ -f "package.json" ]; then
+            echo "frontend_path=." >> $GITHUB_OUTPUT
+          else
+            echo "Frontend directory not found!"
+            exit 1
+          fi
 
       - name: Install dependencies
         run: |
-          cd inventory_app/frontend
+          cd ${{ steps.find-frontend.outputs.frontend_path }}
           npm ci
 
       - name: Lint with ESLint
@@ -220,7 +241,7 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
           sarif_file: 'trivy-results.sarif'
@@ -230,10 +251,24 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Find backend directory for security scan
+        id: find-backend-security
+        run: |
+          if [ -d "inventory_app/backend" ]; then
+            echo "backend_path=inventory_app/backend" >> $GITHUB_OUTPUT
+          elif [ -d "backend" ]; then
+            echo "backend_path=backend" >> $GITHUB_OUTPUT
+          elif [ -f "requirements.txt" ]; then
+            echo "backend_path=." >> $GITHUB_OUTPUT
+          else
+            echo "Backend directory not found!"
+            exit 1
+          fi
+
       - name: Run Bandit security scan
         run: |
           pip install bandit[toml]
-          cd inventory_app/backend
+          cd ${{ steps.find-backend-security.outputs.backend_path }}
           bandit -r . -f json -o ../bandit-report.json --skip B101 || true
 
       - name: Upload security scan results
