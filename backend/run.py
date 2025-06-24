@@ -1,44 +1,33 @@
-# backend/run.py - Fixed for Render deployment
-import os
+# backend/run.py
 import sys
+import os
 
-# Add current directory to Python path for imports
+# Add the parent directory to the Python path to resolve imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, current_dir)
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
-# Import create_app from current directory (not 'backend' module)
-try:
-    # When running from backend directory on Render
-    from __init__ import create_app
-except ImportError:
+# Now import the app factory
+from backend import create_app
+
+def create_application():
+    """Application factory with proper error handling"""
     try:
-        # Alternative import method
-        from . import create_app
-    except ImportError:
-        # Fallback for local development
-        from backend import create_app
-
-# Determine environment and configuration
-flask_env = os.environ.get('FLASK_ENV', 'development')
-
-if flask_env == 'production':
-    # Import Azure config for production
-    try:
-        from config_azure import AzureConfig  # Remove 'backend.' prefix
-        app = create_app('production')  # Pass config name to your existing system
-        print("🚀 Using Azure production configuration")
-    except ImportError:
-        print("⚠️ Azure config not found, falling back to default")
         app = create_app()
-else:
-    # Use your existing development configuration
-    app = create_app()
+        print("✅ Flask application created successfully!")
+        return app
+    except ImportError as e:
+        print(f"❌ Import error: {e}")
+        print("Checking Python path and module structure...")
+        print(f"Current directory: {current_dir}")
+        print(f"Python path: {sys.path[:3]}...")  # Show first 3 entries
+        raise
+    except Exception as e:
+        print(f"❌ Unexpected error creating app: {e}")
+        raise
+
+app = create_application()
 
 if __name__ == "__main__":
-    # Get port from environment variable or default to 10000 (Render uses 10000)
-    port = int(os.environ.get('PORT', 10000))
-    debug = flask_env == 'development'
-    
-    print(f"Starting server on port {port}")
-    print(f"Environment: {flask_env}")
-    app.run(debug=debug, port=port, host='0.0.0.0')
+    app.run(debug=True, host='127.0.0.1', port=5000)

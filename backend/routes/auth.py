@@ -1,8 +1,8 @@
-# backend/routes/auth.py
+# backend/routes/auth.py - Your original working version
 from datetime import datetime, timedelta
 import re
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt # type: ignore
 from ..models import Role, User
 from ..extensions import db, jwt
 from ..utils.role_checker import role_required
