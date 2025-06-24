@@ -1,4 +1,4 @@
-# backend/__init__.py - Updated to work with your existing config.py
+# backend/__init__.py - Updated CORS for production
 import os
 import sys
 from flask import Flask
@@ -68,11 +68,23 @@ def create_app(config_name=None):
         # Initialize extensions with app
         db.init_app(app)
         jwt.init_app(app)
+        
+        # UPDATED CORS - Allow your production frontend
+        cors_origins = [
+            "http://localhost:3000",
+            "http://localhost:3001", 
+            "https://adira-medica-frontend.onrender.com",  # Your frontend URL
+            "https://*.onrender.com",  # Any Render subdomain
+            "https://*.ngrok.io", 
+            "https://*.ngrok-free.app"
+        ]
+        
         cors.init_app(app, resources={
             r"/api/*": {
-                "origins": ["http://localhost:3000", "http://localhost:3001", "https://*.ngrok.io", "https://*.ngrok-free.app"],
+                "origins": cors_origins,
                 "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_headers": ["Content-Type", "Authorization"]
+                "allow_headers": ["Content-Type", "Authorization"],
+                "supports_credentials": True
             }
         })
         migrate.init_app(app, db)
