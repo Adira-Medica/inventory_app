@@ -172,19 +172,59 @@ class SafeProductionConfig(Config):
     # Set token expiration for production (default 24 hours)
     JWT_ACCESS_TOKEN_EXPIRES = int(os.environ.get('JWT_ACCESS_TOKEN_EXPIRES', 86400))
 
-# Configuration mapping - use SafeProductionConfig to avoid import-time validation
+# NEW: Azure production configuration
+class AzureProductionConfig(Config):
+    """Azure-specific production configuration"""
+    DEBUG = False
+    TESTING = False
+    
+    # Database configuration (set by Azure deployment script)
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,
+        'pool_recycle': 120,
+        'pool_pre_ping': True,
+        'connect_args': {'sslmode': 'require'}  # Azure PostgreSQL requires SSL
+    }
+    
+    # Security Configuration (set by Azure deployment)
+    SECRET_KEY = os.environ.get('SECRET_KEY')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
+    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour for production security
+    
+    # Azure-specific settings
+    AZURE_KEY_VAULT_URL = os.environ.get('AZURE_KEY_VAULT_URL')
+    
+    # Container-specific paths for Azure
+    PDF_UPLOAD_FOLDER = '/app/backend/templates'
+    PDF_OUTPUT_FOLDER = '/app/backend/generated'
+    
+    # Production logging
+    LOG_LEVEL = 'INFO'
+    LOG_FILE = '/app/backend/logs/app.log'
+    
+    # Deployment info
+    DEPLOYMENT_TYPE = os.environ.get('DEPLOYMENT_TYPE', 'unknown')
+
+# Configuration mapping - ADD Azure config
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': SafeProductionConfig,  # Use safe version
+    'azure': AzureProductionConfig,      # NEW: Azure-specific config
     'default': DevelopmentConfig
 }
 
-# Select configuration based on environment
+# UPDATED: Select configuration based on environment
 def get_config(config_name=None):
     """Get configuration class based on environment"""
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'development')
+    
+    # Handle Azure production environment
+    if config_name == 'production' and os.environ.get('AZURE_KEY_VAULT_URL'):
+        config_name = 'azure'
+        print("🚀 Detected Azure environment, using AzureProductionConfig")
     
     config_class = config.get(config_name, DevelopmentConfig)
     
@@ -192,7 +232,7 @@ def get_config(config_name=None):
     print(f"Loading configuration: {config_name} -> {config_class.__name__}")
     
     # For production, we could add runtime validation here if needed
-    if config_name == 'production':
+    if config_name in ['production', 'azure']:
         # Validate critical production settings when config is actually used
         if hasattr(config_class, 'SECRET_KEY') and config_class.SECRET_KEY == 'will-be-validated-later':
             if not os.environ.get('SECRET_KEY'):
@@ -200,6 +240,11 @@ def get_config(config_name=None):
         if hasattr(config_class, 'JWT_SECRET_KEY') and config_class.JWT_SECRET_KEY == 'will-be-validated-later':
             if not os.environ.get('JWT_SECRET_KEY'):
                 print("⚠️ Warning: JWT_SECRET_KEY not set for production")
+        
+        # Azure-specific validation
+        if config_name == 'azure':
+            if not os.environ.get('DATABASE_URL'):
+                print("⚠️ Warning: DATABASE_URL not set for Azure deployment")
     
     return config_class
 
