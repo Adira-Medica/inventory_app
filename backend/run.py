@@ -1,4 +1,4 @@
-# backend/run.py
+# backend/run.py - Updated for production deployment
 import sys
 import os
 
@@ -14,7 +14,9 @@ from backend import create_app
 def create_application():
     """Application factory with proper error handling"""
     try:
-        app = create_app()
+        # Get environment from environment variable or default to development
+        config_name = os.getenv('FLASK_ENV', 'development')
+        app = create_app(config_name)
         print("✅ Flask application created successfully!")
         return app
     except ImportError as e:
@@ -30,4 +32,10 @@ def create_application():
 app = create_application()
 
 if __name__ == "__main__":
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    # Check if we're running in production or development
+    port = int(os.environ.get('PORT', 5000))
+    host = os.environ.get('HOST', '127.0.0.1')
+    debug = os.environ.get('FLASK_ENV', 'development') == 'development'
+    
+    print(f"Starting Flask app on {host}:{port} (debug={debug})")
+    app.run(host=host, port=port, debug=debug)
