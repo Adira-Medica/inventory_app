@@ -6,7 +6,7 @@ Flask-CORS==4.0.0
 Flask-Migrate==4.0.5
 
 # Database
-SQLAlchemy==2.0.23
+SQLAlchemy>=2.0.25
 psycopg2-binary==2.9.9
 
 # Data processing - Python 3.13 compatible versions
