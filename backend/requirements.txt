@@ -1,4 +1,4 @@
-# backend/requirements.txt - Fixed version compatibility
+# backend/requirements.txt - Updated for deployment
 # Compatible Flask ecosystem versions for Python 3.11+
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
@@ -16,8 +16,9 @@ pdfrw==0.4
 python-dotenv==1.0.0
 reportlab==4.0.4
 
-# Web server for production (optional)
-gunicorn==21.2.0
+# Production WSGI servers
+gunicorn==21.2.0; sys_platform != "win32"  # Linux/Mac only
+waitress==2.1.2; sys_platform == "win32"   # Windows only
 
 # Security and auth
 bcrypt==4.0.1

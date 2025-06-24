@@ -1,4 +1,4 @@
-# backend/run.py - Updated for production deployment
+# backend/run.py - Works for both flask run and gunicorn
 import sys
 import os
 
@@ -8,7 +8,7 @@ parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-# Now import the app factory
+# Import the app factory
 from backend import create_app
 
 def create_application():
@@ -19,18 +19,14 @@ def create_application():
         app = create_app(config_name)
         print("✅ Flask application created successfully!")
         return app
-    except ImportError as e:
-        print(f"❌ Import error: {e}")
-        print("Checking Python path and module structure...")
-        print(f"Current directory: {current_dir}")
-        print(f"Python path: {sys.path[:3]}...")  # Show first 3 entries
-        raise
     except Exception as e:
-        print(f"❌ Unexpected error creating app: {e}")
+        print(f"❌ Error creating app: {e}")
         raise
 
+# Create the app instance - this is what gunicorn will use
 app = create_application()
 
+# This runs only when you do `python run.py` directly
 if __name__ == "__main__":
     # Check if we're running in production or development
     port = int(os.environ.get('PORT', 5000))
