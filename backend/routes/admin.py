@@ -316,3 +316,117 @@ def get_audit_logs():
         return jsonify(logs), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+# Add this to your backend/routes/admin.py file
+
+@bp.route('/users/pending', methods=['GET'])
+@jwt_required()
+@role_required(['admin'])
+def get_pending_users():
+    try:
+        print("🔍 Fetching pending users...")
+        
+        # Get users with pending status
+        pending_users = User.query.filter_by(status='pending').all()
+        
+        users_data = []
+        for user in pending_users:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'role': {
+                    'id': user.role.id,
+                    'name': user.role.name
+                },
+                'status': user.status,
+                'active': user.active,
+                'registration_date': user.registration_date.isoformat() if hasattr(user, 'registration_date') and user.registration_date else None
+            }
+            users_data.append(user_data)
+        
+        print(f"✅ Found {len(users_data)} pending users")
+        return jsonify(users_data), 200
+        
+    except Exception as e:
+        print(f"❌ Error fetching pending users: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/users/<int:user_id>/approve', methods=['PUT'])
+@jwt_required()
+@role_required(['admin'])
+def approve_user(user_id):
+    try:
+        print(f"🔄 Approving user ID: {user_id}")
+        
+        user = User.query.get_or_404(user_id)
+        
+        # Set status to approved and activate the user
+        user.status = 'approved'
+        user.active = True
+        db.session.commit()
+        
+        # Log this action
+        try:
+            from ..utils.audit_logger import log_activity
+            log_activity(
+                action="Approve User",
+                details=f"Approved user registration: {user.username}"
+            )
+        except Exception as log_error:
+            print(f"⚠️ Logging failed: {str(log_error)}")
+        
+        print(f"✅ User {user.username} approved successfully")
+        return jsonify({
+            'message': 'User approved successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'status': user.status,
+                'active': user.active
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error approving user: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/users/<int:user_id>/reject', methods=['PUT'])
+@jwt_required()
+@role_required(['admin'])
+def reject_user(user_id):
+    try:
+        print(f"🔄 Rejecting user ID: {user_id}")
+        
+        user = User.query.get_or_404(user_id)
+        
+        # Set status to rejected and deactivate
+        user.status = 'rejected'
+        user.active = False
+        db.session.commit()
+        
+        # Log this action
+        try:
+            from ..utils.audit_logger import log_activity
+            log_activity(
+                action="Reject User",
+                details=f"Rejected user registration: {user.username}"
+            )
+        except Exception as log_error:
+            print(f"⚠️ Logging failed: {str(log_error)}")
+        
+        print(f"✅ User {user.username} rejected successfully")
+        return jsonify({
+            'message': 'User rejected successfully',
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'status': user.status,
+                'active': user.active
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error rejecting user: {str(e)}")
+        return jsonify({'error': str(e)}), 500
