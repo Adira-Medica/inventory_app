@@ -1,4 +1,4 @@
-# backend/__init__.py - Updated CORS for production
+# backend/__init__.py - Complete CORS fix with OPTIONS preflight
 import os
 import sys
 from flask import Flask
@@ -69,24 +69,20 @@ def create_app(config_name=None):
         db.init_app(app)
         jwt.init_app(app)
         
-        # UPDATED CORS - Allow your production frontend
-        cors_origins = [
-            "http://localhost:3000",
-            "http://localhost:3001", 
-            "https://adira-medica-frontend.onrender.com",  # Your frontend URL
-            "https://*.onrender.com",  # Any Render subdomain
-            "https://*.ngrok.io", 
-            "https://*.ngrok-free.app"
-        ]
+        # COMPREHENSIVE CORS SETUP
+        cors.init_app(app, 
+            origins=[
+                "http://localhost:3000",
+                "http://localhost:3001", 
+                "https://adira-medica-frontend.onrender.com",
+                "https://*.onrender.com"
+            ],
+            methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+            supports_credentials=True,
+            send_wildcard=False
+        )
         
-        cors.init_app(app, resources={
-            r"/api/*": {
-                "origins": cors_origins,
-                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-                "allow_headers": ["Content-Type", "Authorization"],
-                "supports_credentials": True
-            }
-        })
         migrate.init_app(app, db)
         print("✅ Extensions initialized successfully")
         
@@ -99,6 +95,19 @@ def create_app(config_name=None):
             def init_app(self, app): pass
         
         app.db = MockDB()
+    
+    # CRITICAL: Add global OPTIONS handler for preflight requests
+    @app.before_request
+    def handle_preflight():
+        from flask import request
+        if request.method == "OPTIONS":
+            from flask import make_response
+            response = make_response()
+            response.headers.add("Access-Control-Allow-Origin", "https://adira-medica-frontend.onrender.com")
+            response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
+            response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+            response.headers.add('Access-Control-Allow-Credentials', "true")
+            return response
     
     try:
         # Import and register error handlers
