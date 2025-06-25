@@ -1,12 +1,12 @@
 # backend/routes/item.py
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import get_jwt_identity, jwt_required # type: ignore
 from ..utils.role_checker import role_required
 from ..utils.audit_logger import log_activity
 from ..models import ItemNumber
 from ..extensions import db
-from sqlalchemy import func
+from sqlalchemy import func # type: ignore
 
 bp = Blueprint('item', __name__, url_prefix='/api/item')
 

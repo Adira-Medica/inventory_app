@@ -1,6 +1,6 @@
 # backend/utils/audit_logger.py
 from flask import request
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity # type: ignore
 from datetime import datetime
 import os
 import json

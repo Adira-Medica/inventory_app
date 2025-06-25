@@ -1,6 +1,6 @@
 # backend/utils/role_checker.py
 from functools import wraps
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity # type: ignore
 from flask import jsonify, request
 from ..models import User
 

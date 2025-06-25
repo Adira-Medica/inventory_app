@@ -1,4 +1,4 @@
-# backend/__init__.py - Complete CORS fix with OPTIONS preflight
+# backend/__init__.py - Add JWT configuration for dict identity
 import os
 import sys
 from flask import Flask
@@ -69,6 +69,37 @@ def create_app(config_name=None):
         db.init_app(app)
         jwt.init_app(app)
         
+        # CRITICAL: Configure JWT to work with dict identity
+        @jwt.additional_claims_loader
+        def make_additional_claims(identity):
+            if isinstance(identity, dict):
+                return {
+                    'username': identity.get('username'),
+                    'role': identity.get('role'),
+                    'user_id': identity.get('id')
+                }
+            return {}
+        
+        @jwt.user_identity_loader
+        def user_identity_lookup(user):
+            if isinstance(user, dict):
+                return str(user.get('id', ''))  # Return user ID as string for 'sub' claim
+            return str(user)
+        
+        @jwt.user_lookup_loader
+        def user_lookup_callback(_jwt_header, jwt_data):
+            # This allows get_current_user() to work
+            identity = jwt_data['sub']
+            if identity:
+                from backend.models import User
+                try:
+                    user_id = int(identity) if identity.isdigit() else None
+                    if user_id:
+                        return User.query.get(user_id)
+                except (ValueError, TypeError):
+                    pass
+            return None
+        
         # COMPREHENSIVE CORS SETUP
         cors.init_app(app, 
             origins=[
@@ -126,28 +157,59 @@ def create_app(config_name=None):
         def internal_error(error):
             return {"error": "Internal server error"}, 500
     
+    # IMPROVED: Try to register blueprints individually with better error handling
+    blueprint_errors = []
+    
     try:
-        # Import and register blueprints with absolute imports
-        from backend.routes import auth, form, item, receiving, admin
+        from backend.routes.auth import bp as auth_bp
+        app.register_blueprint(auth_bp)
+        print("✅ Auth blueprint registered successfully")
+    except Exception as e:
+        blueprint_errors.append(f"Auth blueprint failed: {e}")
+        print(f"⚠️ Auth blueprint failed: {e}")
         
-        app.register_blueprint(auth.bp)
-        app.register_blueprint(form.bp)
-        app.register_blueprint(item.bp)
-        app.register_blueprint(receiving.bp)
-        app.register_blueprint(admin.bp)
-        print("✅ Blueprints registered successfully")
-        
-    except ImportError as e:
-        print(f"⚠️ Blueprint registration failed: {e}")
-        
-        # Add a basic health check route as fallback
-        @app.route('/health')
-        def health():
-            return {"status": "ok", "message": "Flask app is running"}
-            
-        @app.route('/api/test')
-        def api_test():
-            return {"status": "ok", "message": "API is accessible"}
+        # Create minimal auth route as fallback
+        @app.route('/api/auth/login', methods=['POST'])
+        def fallback_login():
+            from flask import request, jsonify
+            return jsonify({"error": "Auth module not available", "details": str(e)}), 500
+    
+    try:
+        from backend.routes.item import bp as item_bp
+        app.register_blueprint(item_bp)
+        print("✅ Item blueprint registered successfully")
+    except Exception as e:
+        blueprint_errors.append(f"Item blueprint failed: {e}")
+        print(f"⚠️ Item blueprint failed: {e}")
+    
+    try:
+        from backend.routes.receiving import bp as receiving_bp
+        app.register_blueprint(receiving_bp)
+        print("✅ Receiving blueprint registered successfully")
+    except Exception as e:
+        blueprint_errors.append(f"Receiving blueprint failed: {e}")
+        print(f"⚠️ Receiving blueprint failed: {e}")
+    
+    try:
+        from backend.routes.admin import bp as admin_bp
+        app.register_blueprint(admin_bp)
+        print("✅ Admin blueprint registered successfully")
+    except Exception as e:
+        blueprint_errors.append(f"Admin blueprint failed: {e}")
+        print(f"⚠️ Admin blueprint failed: {e}")
+    
+    try:
+        from backend.routes.form import bp as form_bp
+        app.register_blueprint(form_bp)
+        print("✅ Form blueprint registered successfully")
+    except Exception as e:
+        blueprint_errors.append(f"Form blueprint failed: {e}")
+        print(f"⚠️ Form blueprint failed: {e}")
+    
+    if blueprint_errors:
+        print(f"⚠️ Some blueprints failed to load: {blueprint_errors}")
+    else:
+        print("✅ All blueprints registered successfully")
     
     # Add basic routes for testing and health checks
     @app.route('/')
@@ -157,7 +219,8 @@ def create_app(config_name=None):
             "status": "running",
             "environment": config_name,
             "testing": app.config.get('TESTING', False),
-            "endpoints": ["/health", "/api/test"]
+            "endpoints": ["/health", "/api/test", "/api/auth/login"],
+            "blueprint_errors": blueprint_errors if blueprint_errors else None
         }
     
     # Add a simple API health endpoint
@@ -166,8 +229,14 @@ def create_app(config_name=None):
         return {
             "status": "healthy",
             "environment": config_name,
-            "database": "connected" if app.config.get('SQLALCHEMY_DATABASE_URI') else "not configured"
+            "database": "connected" if app.config.get('SQLALCHEMY_DATABASE_URI') else "not configured",
+            "blueprints_loaded": len(blueprint_errors) == 0
         }
+    
+    # Add test auth endpoint to verify it's working
+    @app.route('/api/test-auth')
+    def test_auth():
+        return {"message": "Auth endpoint test", "status": "working"}
     
     print("🚀 Flask application created successfully!")
     return app

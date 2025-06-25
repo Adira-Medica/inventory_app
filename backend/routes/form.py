@@ -1,6 +1,6 @@
 # backend/routes/form.py
 from flask import Blueprint, request, jsonify, send_file
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required # type: ignore
 from ..models import ItemNumber, ReceivingData
 from ..utils.html_to_pdf_handler import HTMLToPDFHandler
 import os

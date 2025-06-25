@@ -1,6 +1,6 @@
 # backend/routes/admin.py
 from flask import Blueprint, request, jsonify, send_file, Response
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity # type: ignore
 from ..utils.role_checker import role_required
 from ..models import User, Role, ItemNumber, ReceivingData
 from ..extensions import db
