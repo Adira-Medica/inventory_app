@@ -1,8 +1,9 @@
-# backend/utils/html_to_pdf_handler.py
+# backend/utils/html_to_pdf_handler.py - Replace your entire file with this:
 from flask import render_template
 import pdfkit # type: ignore
 from pathlib import Path
 from datetime import datetime
+import os
 
 class HTMLToPDFHandler:
     def __init__(self):
@@ -10,19 +11,20 @@ class HTMLToPDFHandler:
         self.generated_dir = Path(__file__).parent.parent / 'generated'
         self.generated_dir.mkdir(exist_ok=True)
         
-        self.config = pdfkit.configuration(
-            wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
-        )
+        # ✅ FIXED: Use the wkhtmltopdf we know exists on Render from diagnostics
+        self.config = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
         
         self.pdf_options = {
             'page-size': 'A4',
-            'margin-top': '0mm',
-            'margin-right': '0mm',
-            'margin-bottom': '0mm',
-            'margin-left': '0mm',
+            'margin-top': '10mm',
+            'margin-right': '10mm',
+            'margin-bottom': '10mm',
+            'margin-left': '10mm',
             'encoding': 'UTF-8',
             'no-outline': None,
-            'enable-local-file-access': None
+            'enable-local-file-access': None,
+            'disable-smart-shrinking': None,
+            'print-media-type': None
         }
 
     def _format_boolean_value(self, value):
@@ -31,12 +33,67 @@ class HTMLToPDFHandler:
             return 'checked' if value else ''
         return 'checked' if str(value).lower() in ['true', 'yes', '1'] else ''
 
-    def generate_520b_pdf(self, data):
+    def generate_501a_pdf(self, data):
         try:
-            print("Received data for 520B:", data)  # Debug print
+            print(f"🔄 Generating 501A PDF for receiving: {data.get('receiving_no', 'unknown')}")
             
             template_data = {
-                # Basic fields
+                'receiving_no': data.get('receiving_no', ''),
+                'item_no': data.get('item_no', ''),
+                'item_description': data.get('item_description', ''),
+                'client_name': data.get('client_name', ''),
+                'vendor_name': data.get('vendor_name', ''),
+                'lot_no': data.get('lot_no', ''),
+                'storage_conditions': data.get('storage_conditions', ''),
+                'other_storage_conditions': data.get('other_storage_conditions', ''),
+                'total_units_received': data.get('total_units_received', ''),
+                'controlled_substance': data.get('controlled_substance', ''),
+                'locationStatus': {
+                    'quarantine': self._format_boolean_value(data.get('locationStatus', {}).get('quarantine', False)),
+                    'rejected': self._format_boolean_value(data.get('locationStatus', {}).get('rejected', False)),
+                    'released': self._format_boolean_value(data.get('locationStatus', {}).get('released', False))
+                },
+                'dateType': data.get('dateType', ''),
+                'dateValue': data.get('dateValue', ''),
+                'completedBy': data.get('completedBy', ''),
+                'transactions': data.get('transactions', []),
+                'comments': data.get('comments', '')
+            }
+            
+            print(f"📝 Rendering template with data keys: {list(template_data.keys())}")
+            rendered_html = render_template('501A.html', **template_data)
+            
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = self.generated_dir / f"501A_{data.get('receiving_no', 'unknown')}_{timestamp}.pdf"
+            
+            print(f"🎯 Generating PDF to: {output_path}")
+            
+            pdfkit.from_string(
+                rendered_html,
+                str(output_path),
+                options=self.pdf_options,
+                configuration=self.config
+            )
+            
+            if not output_path.exists():
+                raise Exception("PDF file was not created")
+                
+            file_size = output_path.stat().st_size
+            print(f"✅ PDF generated successfully: {output_path} ({file_size} bytes)")
+            
+            return output_path
+            
+        except Exception as e:
+            print(f"❌ Error generating 501A PDF: {str(e)}")
+            import traceback
+            print(f"📍 Traceback: {traceback.format_exc()}")
+            raise Exception(f"PDF generation failed: {str(e)}")
+
+    def generate_520b_pdf(self, data):
+        try:
+            print(f"🔄 Generating 520B PDF for item: {data.get('Item No', 'unknown')}")
+            
+            template_data = {
                 'item_no': data.get('Item No', ''),
                 'tracking_no': data.get('Tracking No', ''),
                 'client_name': data.get('Client Name', ''),
@@ -51,39 +108,26 @@ class HTMLToPDFHandler:
                 'uom': data.get('UoM', ''),
                 'total_units': data.get('Total Units (vendor count)', ''),
                 'total_containers': data.get('Total Storage Containers', ''),
-
-                # Delivery acceptance with Yes/No/NA options
-                'deliveryAcceptance': {
-                    'material_placed_yes': data.get('deliveryAcceptance', {}).get('material_placed') == 'yes',
-                    'material_placed_no': data.get('deliveryAcceptance', {}).get('material_placed') == 'no',
-                    'discrepancies_yes': data.get('deliveryAcceptance', {}).get('discrepancies') == 'yes',
-                    'discrepancies_no': data.get('deliveryAcceptance', {}).get('discrepancies') == 'no',
-                    'supporting_docs_yes': data.get('deliveryAcceptance', {}).get('supporting_docs') == 'yes',
-                    'supporting_docs_no': data.get('deliveryAcceptance', {}).get('supporting_docs') == 'no',
-                    'shipment_rejected_yes': data.get('deliveryAcceptance', {}).get('shipment_rejected') == 'yes',
-                    'shipment_rejected_no': data.get('deliveryAcceptance', {}).get('shipment_rejected') == 'no',
-                },
+                'deliveryAcceptance': [
+                    {'name': 'Item numbers match shipping documentation', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Item numbers match shipping documentation', False))},
+                    {'name': 'Lot numbers match shipping documentation', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Lot numbers match shipping documentation', False))},
+                    {'name': 'Quantity matches shipping documentation', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Quantity matches shipping documentation', False))},
+                    {'name': 'Shipping container is intact', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Shipping container is intact', False))},
+                    {'name': 'Product container(s) is/are intact', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Product container(s) is/are intact', False))},
+                    {'name': 'Temperature recording device included', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Temperature recording device included', False))},
+                    {'name': 'Temperature has been maintained', 'checked': self._format_boolean_value(data.get('deliveryAcceptance', {}).get('Temperature has been maintained', False))}
+                ],
+                # Add the missing deliveryAcceptanceNA data
                 'deliveryAcceptanceNA': {
-                    'material_placed': data.get('deliveryAcceptance', {}).get('material_placed') == 'na',
-                    'discrepancies': data.get('deliveryAcceptance', {}).get('discrepancies') == 'na',
-                    'supporting_docs': data.get('deliveryAcceptance', {}).get('supporting_docs') == 'na',
-                    'shipment_rejected': data.get('deliveryAcceptance', {}).get('shipment_rejected') == 'na',
+                    'material_placed': self._format_boolean_value(data.get('deliveryAcceptanceNA', {}).get('material_placed', False)),
+                    'temperature_maintained': self._format_boolean_value(data.get('deliveryAcceptanceNA', {}).get('temperature_maintained', False)),
+                    'device_included': self._format_boolean_value(data.get('deliveryAcceptanceNA', {}).get('device_included', False))
                 },
-                
-                # Date section
-                'dateType': data.get('selectedDateType', ''),
+                'dateType': data.get('dateType', ''),
                 'dateValue': data.get('dateValue', ''),
-                
-                # Completed By sections
-                'deliveryCompletedBy': data.get('deliveryCompletedBy', ''),
-                'receivingCompletedBy': data.get('receivedBy', ''),
-                
-                # Document verification and issues sections
+                'receivingCompletedBy': data.get('receivingCompletedBy', ''),
                 'documentVerification': [
-                    {'name': 'Purchase Order', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('Purchase Order', False))},
-                    {'name': 'Packing Slip', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('Packing Slip', False))},
-                    {'name': 'Bill of Lading', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('Bill of Lading', False))},
-                    {'name': 'CoC/CoA', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('CoC/CoA', False))},
+                    {'name': 'COA #', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('COA #', False))},
                     {'name': 'SDS #', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('SDS #', False))},
                     {'name': 'Invoice', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('Invoice', False))},
                     {'name': 'Other (Specify)', 'checked': self._format_boolean_value(data.get('documentVerification', {}).get('Other (Specify)', False))}
@@ -97,8 +141,7 @@ class HTMLToPDFHandler:
                 'ncmr': data.get('NCMR', 'N/A'),
                 'comments': data.get('Comments', '')
             }
-
-            print("Template data for 520B:", template_data)  # Debug print
+            
             rendered_html = render_template('520B.html', **template_data)
             
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -110,16 +153,19 @@ class HTMLToPDFHandler:
                 options=self.pdf_options,
                 configuration=self.config
             )
-
+            
+            if not output_path.exists():
+                raise Exception("PDF file was not created")
+                
             return output_path
-
+            
         except Exception as e:
-            print(f"Error generating 520B PDF: {str(e)}")
-            raise
+            print(f"❌ Error generating 520B PDF: {str(e)}")
+            raise Exception(f"PDF generation failed: {str(e)}")
 
     def generate_519a_pdf(self, data):
         try:
-            print("Received data for 519A:", data)  # Debug print
+            print(f"🔄 Generating 519A PDF for receiving: {data.get('receiving_no', 'unknown')}")
             
             template_data = {
                 'receiving_no': data.get('receiving_no', ''),
@@ -152,10 +198,9 @@ class HTMLToPDFHandler:
                     for movement in data.get('drug_movements', [])
                 ]
             }
-
-            print("Template data:", template_data)  # Debug print
             
             rendered_html = render_template('519A.html', **template_data)
+            
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = self.generated_dir / f"519A_{data.get('receiving_no', 'unknown')}_{timestamp}.pdf"
             
@@ -166,70 +211,11 @@ class HTMLToPDFHandler:
                 configuration=self.config
             )
             
+            if not output_path.exists():
+                raise Exception("PDF file was not created")
+                
             return output_path
             
         except Exception as e:
-            print(f"Error generating 519A PDF: {str(e)}")
-            raise
-
-    def generate_501a_pdf(self, data):
-        try:
-            print("Received 501A data:", data)  # Debug print
-            
-            template_data = {
-                'receiving_no': data.get('receiving_no', ''),
-                'item_no': data.get('item_no', ''),
-                'item_description': data.get('item_description', ''),
-                'client_name': data.get('client_name', ''),
-                'vendor_name': data.get('vendor_name', ''),
-                'lot_no': data.get('lot_no', ''),
-                'storage_conditions': data.get('storage_conditions', ''),
-                'other_storage_conditions': data.get('other_storage_conditions', ''),
-                'total_units_received': data.get('total_units_received', ''),
-                'controlled_substance': data.get('controlled_substance', ''),
-               
-                # Location status checkboxes
-                'locationStatus': {
-                    'quarantine': self._format_boolean_value(
-                        data.get('locationStatus', {}).get('quarantine', False)
-                    ),
-                    'rejected': self._format_boolean_value(
-                        data.get('locationStatus', {}).get('rejected', False)
-                    ),
-                    'released': self._format_boolean_value(
-                        data.get('locationStatus', {}).get('released', False)
-                    )
-                },
-               
-                # Date fields
-                'dateType': data.get('dateType', ''),
-                'dateValue': data.get('dateValue', ''),
-                
-                # Completed By field
-                'completedBy': data.get('completedBy', ''),
-                
-                # Transactions table
-                'transactions': data.get('transactions', []),
-               
-                # Comments
-                'comments': data.get('comments', '')
-            }
-
-            print("Template data for 501A:", template_data)  # Debug print
-            rendered_html = render_template('501A.html', **template_data)
-
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_path = self.generated_dir / f"501A_{data.get('receiving_no', 'unknown')}_{timestamp}.pdf"
-            
-            pdfkit.from_string(
-                rendered_html,
-                str(output_path),
-                options=self.pdf_options,
-                configuration=self.config
-            )
-
-            return output_path
-
-        except Exception as e:
-            print(f"Error generating 501A PDF: {str(e)}")
-            raise
+            print(f"❌ Error generating 519A PDF: {str(e)}")
+            raise Exception(f"PDF generation failed: {str(e)}")

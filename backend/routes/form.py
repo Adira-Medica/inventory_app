@@ -270,20 +270,42 @@ def test_520b_template():
             'receiving_no': 'RN001',
             'lot_no': 'LOT001',
             'vendor': 'Test Vendor',
+            'storage_conditions_temp': 'Room Temperature',
+            'storage_conditions_other': 'Dry Storage',
+            'po_no': 'PO001',
+            'protocol_no': 'PROT001',
+            'uom': 'Boxes',
+            'total_units': '100',
+            'total_containers': '10',
             'deliveryAcceptance': [
                 {'name': 'Item numbers match shipping documentation', 'checked': 'checked'},
                 {'name': 'Lot numbers match shipping documentation', 'checked': ''},
+                {'name': 'Quantity matches shipping documentation', 'checked': 'checked'},
+                {'name': 'Shipping container is intact', 'checked': 'checked'},
+                {'name': 'Product container(s) is/are intact', 'checked': ''},
+                {'name': 'Temperature recording device included', 'checked': 'checked'},
+                {'name': 'Temperature has been maintained', 'checked': 'checked'}
             ],
+            # Add the missing deliveryAcceptanceNA data
+            'deliveryAcceptanceNA': {
+                'material_placed': True,
+                'temperature_maintained': False,
+                'device_included': True
+            },
             'documentVerification': [
                 {'name': 'COA #', 'checked': 'checked'},
                 {'name': 'SDS #', 'checked': ''},
+                {'name': 'Invoice', 'checked': 'checked'},
+                {'name': 'Other (Specify)', 'checked': ''}
             ],
             'issuesSection': [
                 {'name': 'Quantity discrepancies found', 'checked': ''},
                 {'name': 'Damage to shipping container(s)', 'checked': ''},
+                {'name': 'Damage to product within shipping container', 'checked': ''},
+                {'name': 'Temperature excursion', 'checked': 'checked'}
             ],
             'ncmr': 'No',
-            'comments': 'Test comments',
+            'comments': 'Test comments for 520B form',
             'dateType': 'Received Date',
             'dateValue': '12/25/2024',
             'receivingCompletedBy': 'Test User'
