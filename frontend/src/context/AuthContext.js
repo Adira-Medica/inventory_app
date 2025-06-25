@@ -1,5 +1,5 @@
-// src/context/AuthContext.js - Fixed JWT parsing for your current structure
-import React, { createContext, useState, useEffect } from 'react';
+// src/context/AuthContext.js - Fixed infinite loop issue
+import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import api from '../api/axios';
 import { toast } from 'react-toastify';
 
@@ -16,7 +16,12 @@ export const AuthProvider = ({ children }) => {
     sessionTimeoutWarningMinutes: 5
   });
 
-  // ✅ Fix: Fetch settings only once when the app loads (not every time `user` changes)
+  // ✅ Use refs to track timers and prevent stale closures
+  const sessionTimerRef = useRef(null);
+  const warningTimerRef = useRef(null);
+  const isInitializedRef = useRef(false);
+
+  // ✅ Fix: Fetch settings only once when the app loads
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -38,38 +43,8 @@ export const AuthProvider = ({ children }) => {
     fetchSessionConfig();
   }, []); // ✅ Only run once on initial mount
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      parseUserFromToken(token);
-      setupSessionTimers();
-    } else {
-      setLoading(false);
-    }
-
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
-    const refreshSession = () => {
-      if (user) {
-        setupSessionTimers();
-      }
-    };
-
-    events.forEach(event => {
-      window.addEventListener(event, refreshSession, { passive: true });
-    });
-
-    return () => {
-      events.forEach(event => {
-        window.removeEventListener(event, refreshSession);
-      });
-
-      if (sessionTimer) clearTimeout(sessionTimer);
-      if (warningTimer) clearTimeout(warningTimer);
-    };
-  }, [user]);
-
-  // 🔥 FIXED: Updated JWT parsing to handle new token structure
-  const parseUserFromToken = (token) => {
+  // ✅ CRITICAL FIX: Memoize parseUserFromToken to prevent recreation
+  const parseUserFromToken = useCallback((token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       
@@ -78,8 +53,9 @@ export const AuthProvider = ({ children }) => {
       if (payload.exp * 1000 < Date.now()) {
         localStorage.removeItem('token');
         setUser(null);
+        return false;
       } else {
-        // NEW: Extract user data from multiple possible JWT structures
+        // Extract user data from multiple possible JWT structures
         let userId = null;
         let username = null;
         let userRole = null;
@@ -111,23 +87,32 @@ export const AuthProvider = ({ children }) => {
 
         console.log('👤 User Data Extracted:', userData);
         setUser(userData);
+        return true;
       }
     } catch (error) {
       console.error('Error parsing token:', error);
       localStorage.removeItem('token');
       setUser(null);
-    } finally {
-      setLoading(false);
+      return false;
     }
-  };
+  }, []); // Empty dependency array - this function doesn't depend on any state
 
-  const setupSessionTimers = () => {
-    if (sessionTimer) clearTimeout(sessionTimer);
-    if (warningTimer) clearTimeout(warningTimer);
+  // ✅ CRITICAL FIX: Memoize setupSessionTimers and use refs
+  const setupSessionTimers = useCallback(() => {
+    // Clear existing timers
+    if (sessionTimerRef.current) {
+      clearTimeout(sessionTimerRef.current);
+      sessionTimerRef.current = null;
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current);
+      warningTimerRef.current = null;
+    }
 
     const { sessionTimeoutMinutes, sessionTimeoutWarningMinutes } = sessionConfig;
 
-    const newWarningTimer = setTimeout(() => {
+    // Set warning timer
+    warningTimerRef.current = setTimeout(() => {
       toast.warning(`Your session will expire in ${sessionTimeoutWarningMinutes} minutes.`, {
         autoClose: false,
         closeOnClick: false,
@@ -146,7 +131,8 @@ export const AuthProvider = ({ children }) => {
       });
     }, (sessionTimeoutMinutes - sessionTimeoutWarningMinutes) * 60 * 1000);
 
-    const newSessionTimer = setTimeout(() => {
+    // Set session timeout timer
+    sessionTimerRef.current = setTimeout(() => {
       localStorage.removeItem('token');
       setUser(null);
       toast.dismiss("session-warning");
@@ -154,9 +140,57 @@ export const AuthProvider = ({ children }) => {
       window.location.href = '/login';
     }, sessionTimeoutMinutes * 60 * 1000);
 
-    setWarningTimer(newWarningTimer);
-    setSessionTimer(newSessionTimer);
-  };
+    // Update state for external access (optional)
+    setWarningTimer(warningTimerRef.current);
+    setSessionTimer(sessionTimerRef.current);
+  }, [sessionConfig]); // Only depend on sessionConfig
+
+  // ✅ CRITICAL FIX: Split initialization and activity monitoring
+  useEffect(() => {
+    // Initial token check - only run once
+    if (!isInitializedRef.current) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const isValid = parseUserFromToken(token);
+        if (isValid) {
+          setupSessionTimers();
+        }
+      }
+      setLoading(false);
+      isInitializedRef.current = true;
+    }
+  }, [parseUserFromToken, setupSessionTimers]);
+
+  // ✅ SEPARATE EFFECT: Activity monitoring (only when user exists)
+  useEffect(() => {
+    if (!user || !isInitializedRef.current) return;
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
+    
+    const refreshSession = () => {
+      setupSessionTimers();
+    };
+
+    // Add event listeners for user activity
+    events.forEach(event => {
+      window.addEventListener(event, refreshSession, { passive: true });
+    });
+
+    // Cleanup function
+    return () => {
+      events.forEach(event => {
+        window.removeEventListener(event, refreshSession);
+      });
+    };
+  }, [user, setupSessionTimers]); // This is safe now because setupSessionTimers is memoized
+
+  // ✅ Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (sessionTimerRef.current) clearTimeout(sessionTimerRef.current);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    };
+  }, []);
 
   const extendSession = async () => {
     try {
@@ -175,11 +209,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
+      setLoading(true);
       const response = await api.post('/auth/login', credentials);
       if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
         
-        // 🔥 FIXED: Set user data from login response (most reliable)
+        // Set user data from login response (most reliable)
         const userData = {
           id: response.data.user.id,
           username: response.data.user.username,
@@ -189,10 +224,13 @@ export const AuthProvider = ({ children }) => {
         console.log('🔑 Login successful, user set:', userData);
         setUser(userData);
         setupSessionTimers();
+        setLoading(false);
         return { success: true };
       }
+      setLoading(false);
       return { success: false, message: 'Invalid response from server' };
     } catch (error) {
+      setLoading(false);
       console.error('Login error:', error);
 
       if (error.response?.status === 401) {
@@ -238,20 +276,29 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('token');
       setUser(null);
 
-      if (sessionTimer) clearTimeout(sessionTimer);
-      if (warningTimer) clearTimeout(warningTimer);
+      // Clear timers using refs
+      if (sessionTimerRef.current) {
+        clearTimeout(sessionTimerRef.current);
+        sessionTimerRef.current = null;
+      }
+      if (warningTimerRef.current) {
+        clearTimeout(warningTimerRef.current);
+        warningTimerRef.current = null;
+      }
+      
       setSessionTimer(null);
       setWarningTimer(null);
     }
   };
 
-  const value = {
+  // ✅ Memoize context value to prevent unnecessary re-renders
+  const value = React.useMemo(() => ({
     user,
     loading,
     login,
     logout,
     extendSession
-  };
+  }), [user, loading]);
 
   return (
     <AuthContext.Provider value={value}>
