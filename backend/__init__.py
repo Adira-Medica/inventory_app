@@ -1,4 +1,4 @@
-# backend/__init__.py - Add JWT configuration for dict identity
+# backend/__init__.py - Quick fix to restore admin access
 import os
 import sys
 from flask import Flask
@@ -69,36 +69,13 @@ def create_app(config_name=None):
         db.init_app(app)
         jwt.init_app(app)
         
-        # CRITICAL: Configure JWT to work with dict identity
-        @jwt.additional_claims_loader
-        def make_additional_claims(identity):
-            if isinstance(identity, dict):
-                return {
-                    'username': identity.get('username'),
-                    'role': identity.get('role'),
-                    'user_id': identity.get('id')
-                }
-            return {}
-        
+        # MINIMAL JWT FIX - Just handle the subject issue
         @jwt.user_identity_loader
         def user_identity_lookup(user):
+            # If it's already a dict (your current format), extract the ID for 'sub'
             if isinstance(user, dict):
-                return str(user.get('id', ''))  # Return user ID as string for 'sub' claim
+                return str(user.get('id', ''))
             return str(user)
-        
-        @jwt.user_lookup_loader
-        def user_lookup_callback(_jwt_header, jwt_data):
-            # This allows get_current_user() to work
-            identity = jwt_data['sub']
-            if identity:
-                from backend.models import User
-                try:
-                    user_id = int(identity) if identity.isdigit() else None
-                    if user_id:
-                        return User.query.get(user_id)
-                except (ValueError, TypeError):
-                    pass
-            return None
         
         # COMPREHENSIVE CORS SETUP
         cors.init_app(app, 
@@ -167,12 +144,6 @@ def create_app(config_name=None):
     except Exception as e:
         blueprint_errors.append(f"Auth blueprint failed: {e}")
         print(f"⚠️ Auth blueprint failed: {e}")
-        
-        # Create minimal auth route as fallback
-        @app.route('/api/auth/login', methods=['POST'])
-        def fallback_login():
-            from flask import request, jsonify
-            return jsonify({"error": "Auth module not available", "details": str(e)}), 500
     
     try:
         from backend.routes.item import bp as item_bp
@@ -232,11 +203,6 @@ def create_app(config_name=None):
             "database": "connected" if app.config.get('SQLALCHEMY_DATABASE_URI') else "not configured",
             "blueprints_loaded": len(blueprint_errors) == 0
         }
-    
-    # Add test auth endpoint to verify it's working
-    @app.route('/api/test-auth')
-    def test_auth():
-        return {"message": "Auth endpoint test", "status": "working"}
     
     print("🚀 Flask application created successfully!")
     return app
