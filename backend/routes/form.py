@@ -1,4 +1,5 @@
 # backend/routes/form.py
+from datetime import datetime
 from flask import Blueprint, request, jsonify, send_file
 from flask_jwt_extended import jwt_required # type: ignore
 from ..models import ItemNumber, ReceivingData
@@ -112,118 +113,107 @@ def generate_519a():
             'error': str(e)
         }), 500
     
+# Add this SIMPLE diagnostic endpoint to your backend/routes/form.py
+
 @bp.route('/diagnose-pdf', methods=['GET'])
-# @jwt_required()  # Temporarily commented out for debugging
 def diagnose_pdf_service():
-    """Diagnostic endpoint to check PDF generation capabilities"""
+    """Simple diagnostic endpoint that won't crash"""
     import os
-    import platform
-    import subprocess
+    import sys
     from pathlib import Path
     
-    diagnostics = {
-        'system_info': {
-            'platform': platform.system(),
-            'platform_release': platform.release(),
-            'architecture': platform.architecture(),
-            'python_version': platform.python_version()
-        },
-        'environment': {
-            'render_env': os.environ.get('RENDER', 'Not set'),
-            'flask_env': os.environ.get('FLASK_ENV', 'Not set'),
-            'pythonpath': os.environ.get('PYTHONPATH', 'Not set')
-        },
-        'file_system': {},
-        'wkhtmltopdf': {},
-        'dependencies': {}
-    }
-    
-    # Check file system
-    backend_dir = Path(__file__).parent.parent
-    templates_dir = backend_dir / 'templates'
-    generated_dir = backend_dir / 'generated'
-    
-    diagnostics['file_system'] = {
-        'backend_dir_exists': backend_dir.exists(),
-        'templates_dir_exists': templates_dir.exists(),
-        'generated_dir_exists': generated_dir.exists(),
-        'templates_dir_writable': templates_dir.exists() and os.access(templates_dir, os.W_OK),
-        'generated_dir_writable': generated_dir.exists() and os.access(generated_dir, os.W_OK),
-        'templates_dir_path': str(templates_dir),
-        'generated_dir_path': str(generated_dir)
-    }
-    
-    # List template files
-    if templates_dir.exists():
-        diagnostics['file_system']['template_files'] = [f.name for f in templates_dir.glob('*.html')]
-    
-    # Check wkhtmltopdf
     try:
-        # Check if wkhtmltopdf is in PATH
-        result = subprocess.run(['which', 'wkhtmltopdf'], 
-                              capture_output=True, text=True, timeout=10)
-        if result.returncode == 0:
-            wkhtmltopdf_path = result.stdout.strip()
-            diagnostics['wkhtmltopdf']['path'] = wkhtmltopdf_path
-            
-            # Get version
-            version_result = subprocess.run([wkhtmltopdf_path, '--version'], 
-                                          capture_output=True, text=True, timeout=10)
-            diagnostics['wkhtmltopdf']['version'] = version_result.stdout.strip()
-            diagnostics['wkhtmltopdf']['available'] = True
-        else:
-            diagnostics['wkhtmltopdf']['available'] = False
-            diagnostics['wkhtmltopdf']['error'] = 'wkhtmltopdf not found in PATH'
-    except Exception as e:
-        diagnostics['wkhtmltopdf']['available'] = False
-        diagnostics['wkhtmltopdf']['error'] = str(e)
-    
-    # Check Python dependencies
-    dependencies_to_check = ['pdfkit', 'reportlab', 'jinja2', 'flask']
-    for dep in dependencies_to_check:
+        diagnostics = {
+            'status': 'running',
+            'python_version': sys.version,
+            'environment': {},
+            'paths': {},
+            'basic_checks': {}
+        }
+        
+        # Safe environment checks
         try:
-            __import__(dep)
-            diagnostics['dependencies'][dep] = 'Available'
-        except ImportError:
-            diagnostics['dependencies'][dep] = 'Missing'
-    
-    # Test pdfkit configuration
-    try:
-        import pdfkit # type: ignore
+            diagnostics['environment'] = {
+                'RENDER': os.environ.get('RENDER', 'Not set'),
+                'FLASK_ENV': os.environ.get('FLASK_ENV', 'Not set'),
+                'PWD': os.environ.get('PWD', 'Not set')
+            }
+        except Exception as e:
+            diagnostics['environment'] = {'error': str(e)}
         
-        # Test different configuration approaches
-        configs_to_test = [
-            ('default', lambda: pdfkit.configuration()),
-            ('auto_detect', lambda: pdfkit.configuration(wkhtmltopdf=None)),
-        ]
-        
-        # Add common paths to test
-        common_paths = [
-            '/usr/bin/wkhtmltopdf',
-            '/usr/local/bin/wkhtmltopdf', 
-            '/opt/bin/wkhtmltopdf',
-            'wkhtmltopdf'  # Let system find it
-        ]
-        
-        for path in common_paths:
-            if os.path.exists(path) or path == 'wkhtmltopdf':
-                configs_to_test.append((f'path_{path}', lambda p=path: pdfkit.configuration(wkhtmltopdf=p)))
-        
-        diagnostics['pdfkit_configs'] = {}
-        for name, config_func in configs_to_test:
-            try:
-                config = config_func()
-                diagnostics['pdfkit_configs'][name] = {
-                    'success': True,
-                    'path': getattr(config, 'wkhtmltopdf', 'Unknown')
-                }
-            except Exception as e:
-                diagnostics['pdfkit_configs'][name] = {
-                    'success': False,
-                    'error': str(e)
-                }
+        # Safe path checks
+        try:
+            current_file = Path(__file__)
+            backend_dir = current_file.parent.parent
+            diagnostics['paths'] = {
+                'current_file': str(current_file),
+                'backend_dir': str(backend_dir),
+                'backend_exists': backend_dir.exists(),
+                'cwd': os.getcwd()
+            }
+            
+            # Check templates
+            templates_dir = backend_dir / 'templates'
+            if templates_dir.exists():
+                diagnostics['paths']['templates_dir'] = str(templates_dir)
+                diagnostics['paths']['template_files'] = [f.name for f in templates_dir.glob('*.html')]
+            else:
+                diagnostics['paths']['templates_dir'] = 'Not found'
                 
-    except ImportError:
-        diagnostics['pdfkit_configs'] = {'error': 'pdfkit not available'}
+        except Exception as e:
+            diagnostics['paths'] = {'error': str(e)}
+        
+        # Basic dependency checks
+        try:
+            dependencies = ['flask', 'pdfkit', 'reportlab']
+            diagnostics['basic_checks'] = {}
+            
+            for dep in dependencies:
+                try:
+                    __import__(dep)
+                    diagnostics['basic_checks'][dep] = 'Available'
+                except ImportError:
+                    diagnostics['basic_checks'][dep] = 'Missing'
+                    
+        except Exception as e:
+            diagnostics['basic_checks'] = {'error': str(e)}
+        
+        # wkhtmltopdf check (safe)
+        try:
+            import subprocess
+            result = subprocess.run(['which', 'wkhtmltopdf'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                diagnostics['wkhtmltopdf'] = {
+                    'available': True,
+                    'path': result.stdout.strip()
+                }
+            else:
+                diagnostics['wkhtmltopdf'] = {
+                    'available': False,
+                    'error': 'Not found in PATH'
+                }
+        except Exception as e:
+            diagnostics['wkhtmltopdf'] = {
+                'available': False,
+                'error': str(e)
+            }
+        
+        return jsonify(diagnostics), 200
+        
+    except Exception as e:
+        # Even if everything fails, return something useful
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'type': type(e).__name__
+        }), 500
     
-    return jsonify(diagnostics), 200
+@bp.route('/test', methods=['GET'])
+def test_endpoint():
+    """Super simple test endpoint"""
+    return jsonify({
+        'status': 'ok',
+        'message': 'Form routes are working',
+        'timestamp': datetime.now().isoformat()
+    }), 200
