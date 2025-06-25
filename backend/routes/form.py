@@ -112,10 +112,8 @@ def generate_519a():
             'error': str(e)
         }), 500
     
-# Add this to your backend/routes/form.py
-
 @bp.route('/diagnose-pdf', methods=['GET'])
-@jwt_required()
+# @jwt_required()  # Temporarily commented out for debugging
 def diagnose_pdf_service():
     """Diagnostic endpoint to check PDF generation capabilities"""
     import os
