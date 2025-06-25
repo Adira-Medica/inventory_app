@@ -1,4 +1,4 @@
-// src/context/AuthContext.js
+// src/context/AuthContext.js - Fixed JWT parsing for your current structure
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../api/axios';
 import { toast } from 'react-toastify';
@@ -68,18 +68,49 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user]);
 
+  // 🔥 FIXED: Updated JWT parsing to handle new token structure
   const parseUserFromToken = (token) => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
+      
+      console.log('🔍 JWT Payload Debug:', payload);
+      
       if (payload.exp * 1000 < Date.now()) {
         localStorage.removeItem('token');
         setUser(null);
       } else {
-        setUser({
-          id: payload.sub?.id || payload.sub,
-          username: payload.sub?.username || '',
-          role: payload.sub?.role || ''
-        });
+        // NEW: Extract user data from multiple possible JWT structures
+        let userId = null;
+        let username = null;
+        let userRole = null;
+
+        // Method 1: Check if it's the new structure (role in root)
+        if (payload.role) {
+          userId = payload.sub; // User ID is in 'sub'
+          username = payload.username; // Username in root
+          userRole = payload.role; // Role in root
+        }
+        // Method 2: Check if it's the old structure (role in sub object)
+        else if (payload.sub && typeof payload.sub === 'object') {
+          userId = payload.sub.id;
+          username = payload.sub.username;
+          userRole = payload.sub.role;
+        }
+        // Method 3: Fallback - sub is just user ID
+        else {
+          userId = payload.sub;
+          username = payload.username || '';
+          userRole = payload.role || '';
+        }
+
+        const userData = {
+          id: userId,
+          username: username || '',
+          role: userRole || ''
+        };
+
+        console.log('👤 User Data Extracted:', userData);
+        setUser(userData);
       }
     } catch (error) {
       console.error('Error parsing token:', error);
@@ -147,11 +178,16 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/login', credentials);
       if (response.data && response.data.token) {
         localStorage.setItem('token', response.data.token);
-        setUser({
+        
+        // 🔥 FIXED: Set user data from login response (most reliable)
+        const userData = {
           id: response.data.user.id,
           username: response.data.user.username,
           role: response.data.user.role
-        });
+        };
+        
+        console.log('🔑 Login successful, user set:', userData);
+        setUser(userData);
         setupSessionTimers();
         return { success: true };
       }

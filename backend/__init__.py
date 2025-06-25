@@ -1,4 +1,4 @@
-# backend/__init__.py - Quick fix to restore admin access
+# backend/__init__.py - Complete JWT fix with role claims
 import os
 import sys
 from flask import Flask
@@ -69,13 +69,24 @@ def create_app(config_name=None):
         db.init_app(app)
         jwt.init_app(app)
         
-        # MINIMAL JWT FIX - Just handle the subject issue
+        # CRITICAL: JWT Configuration to add role data to tokens
         @jwt.user_identity_loader
         def user_identity_lookup(user):
-            # If it's already a dict (your current format), extract the ID for 'sub'
+            # Extract the user ID for the 'sub' claim (required to be string)
             if isinstance(user, dict):
                 return str(user.get('id', ''))
             return str(user)
+        
+        @jwt.additional_claims_loader
+        def add_claims_to_jwt(identity):
+            # Add role and username data to the JWT token
+            if isinstance(identity, dict):
+                return {
+                    'username': identity.get('username'),
+                    'role': identity.get('role'),
+                    'user_id': identity.get('id')
+                }
+            return {}
         
         # COMPREHENSIVE CORS SETUP
         cors.init_app(app, 
